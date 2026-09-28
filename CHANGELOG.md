@@ -1,3 +1,10 @@
+# 0.2.5 — Windows runtime update
+
+Windows builds now pin Python 3.13.15 instead of selecting the older 3.12.10
+binary. Build and bundle checks reject a different interpreter version and
+verify the corresponding runtime DLL. The installer packages the same verified
+executables. Product behavior and local data paths are unchanged.
+
 # 0.2.4 — preserve native CLI access for browser/config helpers
 
 The desktop adapter path was inherited by browser tools, while its required

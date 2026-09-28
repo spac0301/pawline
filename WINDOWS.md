@@ -50,15 +50,15 @@ Claude 작업은 명령행의 `--session-id` 또는 `--resume` UUID, 혹은 사�
 
 ## 소스로 실행하거나 빌드
 
-Python 3.12 x64가 있는 Windows에서 프로젝트 폴더를 엽니다.
+Python 3.13.15 x64가 있는 Windows에서 프로젝트 폴더를 엽니다.
 
 ```powershell
-py -3.12 -m venv .venv
+py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-windows.lock
 .\launch-pet.cmd --pet-dir "C:\path\to\fluff"
 ```
 
-직접 EXE를 만들려면 위의 **새 가상환경**에서 `windows/build.ps1`을 실행합니다.
+`windows/python-version.txt`에 지정된 Python 버전을 사용합니다. 직접 EXE를 만들려면 위의 **새 가상환경**에서 `windows/build.ps1`을 실행합니다.
 빌드에는 사용하는 Qt Essentials만 포함하며, PDF·가상 키보드용 Addons는 필요하지 않습니다.
 배포 전 `tests/verify_windows_bundle.py dist verification/bundle.json`을 같은 Python으로 실행합니다.
 런타임 라이선스는 `licenses` 폴더에, 해당 버전의 Qt/PySide 소스 위치는 `licenses/Qt-SOURCES.json`에 포함됩니다.

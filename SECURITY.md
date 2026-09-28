@@ -7,8 +7,9 @@ not a claim that the application is vulnerability-free.
 
 The exercised host is Linux, one trusted desktop user, GTK3/X11 or XWayland.
 Windows support code uses Qt, psutil, msvcrt locks and owner-only Win32 ACLs.
-Its Qt frontend was exercised offscreen on Linux, while native Windows ACLs,
-process access, executables and real desktop behavior are for recipient verification.
+Windows CI checks the Qt frontend, current-user-only file ACLs, packaged
+executables, and installation/removal. Real recipient desktop integration is
+a separate validation boundary.
 The Windows-only ACL test is skipped on Linux rather than presented as passed.
 Both collectors depend on native app log formats and explicit session identity.
 
@@ -74,8 +75,9 @@ their request/answer contents to disk.
 Tests cover rejected proxy credentials, private file modes and cleanup,
 compressed payload bounds, byte-preserving HTTP/SSE fallback, unknown framing,
 session correlation and absence of synthetic prompt/output data in snapshots.
-The native bundled Codex binary still needs its next normal-launch observation
-before that activation is called verified. Local mock tests are not that proof.
+A recipient must enable response observation in their own Codex installation
+before its real activation is verified. Isolated transport tests do not establish
+that deployment boundary.
 
 ## Distribution
 
@@ -93,3 +95,23 @@ build tool, its transitive dependencies, system GTK/Python libraries and future
 advisories are outside that result. Recipients must maintain OS packages and
 review dependency updates. The vendor's MIT source and font/logo attribution
 are kept in the archive; branding is not an endorsement.
+
+## Windows runtime maintenance
+
+Version 0.2.4 bundled Python 3.12.10. The Windows runtime in 0.2.5 is pinned to
+Python 3.13.15 in `windows/python-version.txt`; builds and bundle verification
+check that exact version. Python's source-only security releases after 3.12.10
+are not supplied by merely requesting the latest 3.12 Windows installer.
+See [Python 3.13.15](https://www.python.org/downloads/release/python-31315/) and
+[the 3.12 release schedule](https://peps.python.org/pep-0693/).
+
+This is runtime maintenance, not a finding of demonstrated exploitation of
+Pawline. Linux uses the recipient's distribution-managed Python/GTK runtime;
+security backports must be assessed using distribution packages, not the Python
+version string alone.
+
+The public 0.2.4 source and portable archives were checked on 2026-09-29 for
+private account/state/log paths and private-key PEM text; no matches were found.
+OSV queries for the 12 checked Python dependency/build packages returned no
+matching advisories. This query does not cover every bundled native library or
+prove the absence of vulnerabilities.
