@@ -22,6 +22,11 @@ class CliHandoffTests(unittest.TestCase):
     def configure(self):
         self.assertEqual(capture.main(["--fluff-configure-cli", sys.executable]), 0)
 
+    def test_explicit_state_directory_works_without_a_home_profile(self):
+        with patch.object(Path, "home", side_effect=RuntimeError("No home profile")):
+            self.configure()
+        self.assertTrue((self.root / "capture-config.json").is_file())
+
     def test_environment_filtered_helper_uses_saved_target_and_preserves_snapshot(self):
         self.configure()
         snapshot = self.root / "desktop.json"

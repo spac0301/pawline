@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sqlite3
+from contextlib import closing
 import tempfile
 import unittest
 
@@ -107,7 +108,7 @@ class CatalogTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             dbpath = Path(directory)/"db"
             source = json.dumps({"subagent": {"thread_spawn": {"parent_thread_id": "p", "agent_nickname": "Worker"}}})
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads(id TEXT,title TEXT,name TEXT,source TEXT,archived INTEGER)")
                 db.executemany("INSERT INTO threads VALUES(?,?,?,?,0)", [("p", None, "Parent", "vscode"),
                     ("c", None, None, source), ("i", None, None, json.dumps({"subagent": "compact"})),
@@ -139,7 +140,7 @@ class CatalogTests(unittest.TestCase):
     def test_parent_resolves_even_when_only_child_observed(self):
         with tempfile.TemporaryDirectory() as directory:
             dbpath = Path(directory)/"db"
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads(id TEXT,title TEXT,source TEXT)")
                 db.executemany("INSERT INTO threads VALUES(?,?,?)", [("p", "Parent", "vscode"),
                     ("c", None, json.dumps({"subagent": {"thread_spawn": {"parent_thread_id": "p"}}}))])

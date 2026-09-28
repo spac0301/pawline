@@ -4,6 +4,7 @@ import unittest
 import socket
 import ssl
 import sqlite3
+from contextlib import closing
 import time
 from unittest.mock import patch
 from pathlib import Path
@@ -86,7 +87,7 @@ class DesktopTests(unittest.TestCase):
     def test_only_observed_thread_titles_are_read(self):
         with tempfile.TemporaryDirectory() as directory:
             dbpath=Path(directory)/"state.sqlite"
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads (id TEXT,title TEXT,first_user_message TEXT)")
                 db.executemany("INSERT INTO threads VALUES (?,?,?)",[(A,"라우팅 펫 구현","PRIVATE"),(B,"다른 작업","SECRET")])
             titles=ThreadCatalog(dbpath).resolve([A])
@@ -98,7 +99,7 @@ class DesktopTests(unittest.TestCase):
     def test_display_name_takes_precedence_over_multiline_first_prompt(self):
         with tempfile.TemporaryDirectory() as directory:
             dbpath=Path(directory)/"state.sqlite"
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads (id TEXT,title TEXT,name TEXT)")
                 db.executemany("INSERT INTO threads VALUES (?,?,?)",[
                     (A,"# Context from my IDE setup:\n## Open tabs:\nPRIVATE_PATH\n## My request:\nPRIVATE_PROMPT",
@@ -110,7 +111,7 @@ class DesktopTests(unittest.TestCase):
     def test_multiline_custom_name_is_flattened(self):
         with tempfile.TemporaryDirectory() as directory:
             dbpath=Path(directory)/"state.sqlite"
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads (id TEXT,title TEXT,name TEXT)")
                 db.execute("INSERT INTO threads VALUES (?,?,?)",(A,"legacy","  카메라\n보정\t작업\u2028확인  "))
             self.assertEqual(ThreadCatalog(dbpath).resolve([A]),{A:"카메라 보정 작업 확인"})
@@ -118,7 +119,7 @@ class DesktopTests(unittest.TestCase):
     def test_task_registration_archive_restore_and_delete_update_the_view(self):
         with tempfile.TemporaryDirectory() as directory:
             dbpath=Path(directory)/"state.sqlite"
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads (id TEXT PRIMARY KEY,title TEXT,name TEXT,archived INTEGER)")
                 db.execute("INSERT INTO threads VALUES (?,?,?,0)",(A,"legacy","기존 작업"))
             catalog=ThreadCatalog(dbpath)
@@ -135,14 +136,14 @@ class DesktopTests(unittest.TestCase):
             self.assertTrue(view(thread_id=B)["selection_unavailable"])
             self.assertIsNone(view(thread_id=B).get("served"))
             # Registration can lag the request, and an actual unnamed task is valid.
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("INSERT INTO threads VALUES (?,NULL,NULL,0)",(B,))
             self.assertEqual(view()["thread_id"],A)
             catalog.checked-=6
             self.assertEqual(view()["thread_id"],B)
             self.assertIn(B,catalog.resolve([A,B]))
             self.assertIsNone(view()["title"])
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("UPDATE threads SET name=?,archived=1 WHERE id=?",("새 작업",B))
             catalog.checked-=6
             self.assertEqual(view()["thread_id"],A)
@@ -152,17 +153,17 @@ class DesktopTests(unittest.TestCase):
             self.assertIsNone(fixed.get("requested"))
             self.assertIsNone(fixed.get("served"))
             self.assertEqual([s["thread_id"] for s in fixed["sessions"]],[A])
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("UPDATE threads SET archived=0 WHERE id=?",(B,))
             catalog.checked-=6
             self.assertEqual(view()["title"],"새 작업")
             self.assertEqual(view(thread_id=B)["effort"],"low")
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("DELETE FROM threads WHERE id=?",(B,))
             catalog.checked-=6
             self.assertEqual(view()["thread_id"],A)
             self.assertTrue(view(thread_id=B)["selection_unavailable"])
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("UPDATE threads SET archived=1")
             catalog.checked-=6
             empty=view()
@@ -175,7 +176,7 @@ class DesktopTests(unittest.TestCase):
     def test_registered_task_without_capture_waits_without_borrowing(self):
         with tempfile.TemporaryDirectory() as directory:
             dbpath=Path(directory)/"state.sqlite"
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads (id TEXT,title TEXT)")
                 db.execute("INSERT INTO threads VALUES (?,?)",(A,"새 작업"))
             catalog=ThreadCatalog(dbpath)
@@ -195,7 +196,7 @@ class DesktopTests(unittest.TestCase):
     def test_catalog_read_error_uses_only_previously_confirmed_tasks_then_recovers(self):
         with tempfile.TemporaryDirectory() as directory:
             dbpath=Path(directory)/"state.sqlite"
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("CREATE TABLE threads (id TEXT,title TEXT,archived INTEGER)")
                 db.execute("INSERT INTO threads VALUES (?,?,0)",(A,"기존 작업"))
             catalog=ThreadCatalog(dbpath)
@@ -203,7 +204,7 @@ class DesktopTests(unittest.TestCase):
             with patch("fluff_monitor.catalog.sqlite3.connect",side_effect=sqlite3.OperationalError("busy")):
                 self.assertEqual(catalog.resolve([A,B]),{A:"기존 작업"})
                 self.assertFalse(catalog.available)
-            with sqlite3.connect(dbpath) as db:
+            with closing(sqlite3.connect(dbpath)) as db, db:
                 db.execute("UPDATE threads SET archived=1 WHERE id=?",(A,))
                 db.execute("INSERT INTO threads VALUES (?,?,0)",(B,"새 작업"))
             catalog.checked-=6
