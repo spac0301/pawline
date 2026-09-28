@@ -1,0 +1,12 @@
+Pawline is installed. Open it from the Start menu.
+
+Pet artwork is downloaded separately:
+https://petdex.dev/pets/fluff
+
+Place pet.json and spritesheet.webp inside:
+%USERPROFILE%\.codex\pets\fluff
+
+To use a different folder, see:
+https://github.com/spac0301/pawline/blob/main/WINDOWS.md
+
+This installer does not change your Codex configuration or start model sessions.
