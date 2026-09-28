@@ -1,0 +1,30 @@
+[
+  {
+    "repository": "qt/qtbase",
+    "version": "6.11.2",
+    "source_url": "https://api.github.com/repos/qt/qtbase/tarball/v6.11.2",
+    "sha256": "5c959bc888fbf5300fb2a28d4c8daa14fa680c2cf5c470d7e2c0d5860e89956c",
+    "license_files": 168
+  },
+  {
+    "repository": "qt/qtsvg",
+    "version": "6.11.2",
+    "source_url": "https://api.github.com/repos/qt/qtsvg/tarball/v6.11.2",
+    "sha256": "5dd7d1b33c3c1ceb322248f1cc180adeac86e1e453da9ac87f74d564aa53eacf",
+    "license_files": 11
+  },
+  {
+    "repository": "qt/qtimageformats",
+    "version": "6.11.2",
+    "source_url": "https://api.github.com/repos/qt/qtimageformats/tarball/v6.11.2",
+    "sha256": "f5f06efd215d7d9382f2683df4366f3e5bda1a8f7001c795c51b76d31df25491",
+    "license_files": 12
+  },
+  {
+    "repository": "pyside/pyside-setup",
+    "version": "6.11.2",
+    "source_url": "https://api.github.com/repos/pyside/pyside-setup/tarball/v6.11.2",
+    "sha256": "b7225a9a63ed2a5cc2f77c11d93e3219b13e8f7da655f22eeeeb8d068c9ed594",
+    "license_files": 28
+  }
+]
