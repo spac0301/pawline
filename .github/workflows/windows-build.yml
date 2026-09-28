@@ -1,0 +1,44 @@
+name: Experimental Windows build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      PYTHONNOUSERSITE: "1"
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Prepare private runtime
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { throw 'Runtime creation failed.' }
+          & .\.venv\Scripts\python.exe -m pip install -r requirements-windows.lock
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
+      - name: Verify source on Windows
+        shell: cmd
+        run: windows\verify.cmd
+      - name: Build experimental executables
+        shell: pwsh
+        run: .\windows\build.ps1
+      - name: Smoke-test packaged executables
+        shell: pwsh
+        run: .\.venv\Scripts\python.exe -B tests/verify_windows_bundle.py dist verification/bundle.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pawline-windows-x64-experimental
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
