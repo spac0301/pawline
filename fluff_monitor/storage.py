@@ -19,9 +19,12 @@ class SnapshotReader:
         return self.cached[path][1]
 
 def state_dir() -> Path:
-    default = (Path(os.environ.get("LOCALAPPDATA") or Path.home()/"AppData/Local")/"FluffMonitor/state"
-               if sys.platform == "win32" else Path.home()/".local/state/codex-routing-detector")
-    return Path(os.environ.get("FLUFF_STATE_DIR") or os.environ.get("CODEX_ROUTING_STATE_DIR") or default)
+    configured = os.environ.get("FLUFF_STATE_DIR") or os.environ.get("CODEX_ROUTING_STATE_DIR")
+    if configured:
+        return Path(configured)
+    if sys.platform == "win32":
+        return Path(os.environ.get("LOCALAPPDATA") or Path.home()/"AppData/Local")/"FluffMonitor/state"
+    return Path.home()/".local/state/codex-routing-detector"
 
 
 def read_json(path: Path) -> dict:
