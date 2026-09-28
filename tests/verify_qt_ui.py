@@ -66,6 +66,25 @@ with tempfile.TemporaryDirectory() as tmp:
         panel.title_popup.grab().save(str(out/(name+'-title.png')))
         expanded.append(dict(provider=name,title_width=panel.title_popup.width(),card=[288,201]))
         panel.title_popup.hide()
+    for provider, anchor in [('gpt', panel.gpt.status), ('claude', panel.anthropic.status)]:
+        anchor.setText('활동 확인 중')
+        before = [w.mapTo(panel, ui.QPoint(0, 0)) for w in widgets]
+        anchor.hovered.emit(True); drain(.4)
+        popup = panel.title_popup
+        assert popup.isVisible(), provider
+        assert popup.button.caption.text() == '활동 확인 중'
+        assert not popup.button.arrow.isVisible()
+        assert popup.button.caption.width() >= anchor.fontMetrics().horizontalAdvance(anchor.text())
+        assert (panel.width(), panel.height()) == (288, 201)
+        assert [w.mapTo(panel, ui.QPoint(0, 0)) for w in widgets] == before
+        assert not popup.geometry().intersects(ui.QRect(*panel.pet_rect()))
+        popup.grab().save(str(out/(provider+'-status.png')))
+        anchor.hovered.emit(False); drain(.3)
+        assert not popup.isVisible()
+        anchor.setText('완료'); anchor.hovered.emit(True); drain(.3)
+        assert not popup.isVisible(), 'unclipped status should stay inline'
+        anchor.hovered.emit(False)
+    panel.update_data(route, claude)
     choices=[]
     for provider in ('gpt','claude'):
         panel.choose_provider(provider);drain()

@@ -145,6 +145,25 @@ try:
         assert not reveal.get_visible()
         assert panel.get_size().width==288
 
+    for anchor, status in panel.reveal_labels.items():
+        status.set_text('활동 확인 중')
+        before = [w.translate_coordinates(panel,0,0) for w in value_column]
+        panel._title_hover(anchor, True); settle()
+        reveal = panel.title_reveal
+        assert reveal.get_visible()
+        assert reveal.title.get_text() == '활동 확인 중'
+        assert not reveal.arrow.get_visible()
+        assert reveal.title.get_allocated_width() >= status.create_pango_layout(status.get_text()).get_pixel_size()[0]
+        assert [w.translate_coordinates(panel,0,0) for w in value_column] == before
+        assert tuple(panel.get_size()) == before_size
+        name = 'gpt' if status is panel.chip else 'claude'
+        ui.capture_widgets(panel,pet,out/(name+'-status.png'))
+        panel._title_hover(anchor, False); settle()
+        assert not reveal.get_visible()
+        status.set_text('완료'); panel._title_hover(anchor, True); settle()
+        assert not reveal.get_visible(), 'unclipped status should stay inline'
+        panel._title_hover(anchor, False); settle()
+
     # Identical selector rows, both sides/corners, and no overlap with the sprite.
     choices=[]
     for name,x,y in [('middle',600,300),('left',0,300),('top-right',1160,0),('bottom-right',1160,680)]:
