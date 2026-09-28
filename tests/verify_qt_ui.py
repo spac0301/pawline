@@ -45,6 +45,9 @@ with tempfile.TemporaryDirectory() as tmp:
     columns=[w.mapTo(panel,ui.QPoint(0,0)).x() for w in widgets]
     assert columns==[94]*8,columns
     assert panel.gpt.title.caption.x()==8 and panel.anthropic.title.caption.x()==8
+    assert panel.anthropic.requested.text() == 'claude-opus-5.5 · max'
+    assert panel.anthropic.served.text() == 'claude-opus-5.5'
+    assert claude['served'] == 'claude-opus-5-5'
     assert panel.gpt.cache.text().startswith('입력 캐시 96.8%')
     assert panel.gpt.cache.text()==panel.anthropic.cache.text()
     assert '전체 입력' in panel.gpt.cache.toolTip()

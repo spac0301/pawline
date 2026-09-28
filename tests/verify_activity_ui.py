@@ -82,7 +82,7 @@ try:
     assert '90.0%' in panel.claude_cache.get_text()
     assert panel.cache.get_text().startswith('입력 캐시 90.0% · ')
     assert '새 출력 500 토큰' in panel.cache.get_tooltip_text()
-    assert panel.claude_requested.get_text()=='claude-opus-5-5 · max'
+    assert panel.claude_requested.get_text()=='claude-opus-5.5 · max'
     assert len(panel.claude_menu.choice_items)==2
     panel.update(route,dict(claude,session_id='next',sessions=[dict(session_id='next',selection_key='role:implementation',title='NBV 구현 담당',process_alive=True)]));drain()
     assert len(panel.claude_menu.choice_items)==2,'role rotation grew the menu'
