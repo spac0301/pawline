@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -12,6 +13,7 @@ from fluff_monitor import capture
 
 class CliHandoffTests(unittest.TestCase):
     def setUp(self):
+        self.host_environment = dict(os.environ)
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
@@ -27,38 +29,52 @@ class CliHandoffTests(unittest.TestCase):
             self.configure()
         self.assertTrue((self.root / "capture-config.json").is_file())
 
+    def test_native_handoff_preserves_pipes_quoted_arguments_and_failure_exit(self):
+        project = Path(capture.__file__).resolve().parents[1]
+        env = dict(self.host_environment, FLUFF_STATE_DIR=str(self.root),
+                   CODEX_ROUTING_REAL_CLI=sys.executable)
+        env.pop("FLUFF_DESKTOP_CAPTURE", None)
+        script = "import sys; print(sys.stdin.read()+'|'+sys.argv[1]); print('native-error',file=sys.stderr); sys.exit(23)"
+        result = subprocess.run(
+            [sys.executable, str(project / "run.py"), "capture", "-c", script, "two words"],
+            input="payload", capture_output=True, text=True, env=env, timeout=10)
+        self.assertEqual(result.returncode, 23, result)
+        self.assertEqual(result.stdout.strip(), "payload|two words")
+        self.assertEqual(result.stderr.strip(), "native-error")
+        self.assertFalse((self.root / "desktop.json").exists())
+
     def test_environment_filtered_helper_uses_saved_target_and_preserves_snapshot(self):
         self.configure()
         snapshot = self.root / "desktop.json"
         snapshot.write_bytes(b'{"owner":"desktop"}\n')
-        with patch.object(capture.os, "execve") as execute, patch.object(capture, "DesktopCapture") as observer, patch.object(capture.proxy, "CertAuthority") as ca:
+        with patch.object(capture, "run_native_cli", return_value=0) as execute, patch.object(capture, "DesktopCapture") as observer, patch.object(capture.proxy, "CertAuthority") as ca:
             capture.main(["app-server"])
         native = str(Path(sys.executable).resolve())
-        execute.assert_called_once_with(native, [native, "app-server"], dict(os.environ))
+        execute.assert_called_once_with(native, ["app-server"], dict(os.environ), replace_process=True)
         observer.assert_not_called()
         ca.assert_not_called()
         self.assertEqual(snapshot.read_bytes(), b'{"owner":"desktop"}\n')
 
     def test_helper_preserves_existing_environment_instead_of_replacing_proxy(self):
         self.configure()
-        with patch.dict(os.environ, {"HTTPS_PROXY": "http://example.invalid:3128"}), patch.object(capture.os, "execve") as execute:
+        with patch.dict(os.environ, {"HTTPS_PROXY": "http://example.invalid:3128"}), patch.object(capture, "run_native_cli", return_value=0) as execute:
             capture.main(["app-server"])
         self.assertEqual(execute.call_args.args[2]["HTTPS_PROXY"], "http://example.invalid:3128")
 
     def test_capture_opt_in_is_not_inherited_by_native_cli_tools(self):
         self.configure()
-        with patch.dict(os.environ, {"FLUFF_DESKTOP_CAPTURE": "1"}), patch.object(capture.os, "execve") as execute:
+        with patch.dict(os.environ, {"FLUFF_DESKTOP_CAPTURE": "1"}), patch.object(capture, "run_native_cli", return_value=0) as execute:
             capture.main(["--version"])
         self.assertNotIn("FLUFF_DESKTOP_CAPTURE", execute.call_args.args[2])
 
     def test_explicit_invalid_target_does_not_silently_fall_back(self):
         self.configure()
-        with patch.dict(os.environ, {"CODEX_ROUTING_REAL_CLI": str(self.root / "missing")}), patch.object(capture.os, "execve") as execute:
+        with patch.dict(os.environ, {"CODEX_ROUTING_REAL_CLI": str(self.root / "missing")}), patch.object(capture, "run_native_cli", return_value=0) as execute:
             self.assertEqual(capture.main(["--version"]), 1)
         execute.assert_not_called()
 
     def test_missing_configuration_fails_without_creating_an_observer(self):
-        with patch.object(capture.os, "execve") as execute, patch.object(capture, "DesktopCapture") as observer:
+        with patch.object(capture, "run_native_cli", return_value=0) as execute, patch.object(capture, "DesktopCapture") as observer:
             self.assertEqual(capture.main(["app-server"]), 1)
         execute.assert_not_called()
         observer.assert_not_called()

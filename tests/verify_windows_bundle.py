@@ -46,7 +46,12 @@ def main():
         native = subprocess.run([str(capture), "--version"], env=env,
                                 capture_output=True, text=True, timeout=30)
         if native.returncode or "Python " not in native.stdout:
-            raise RuntimeError(f"Native handoff failed: {native.stdout} {native.stderr}")
+            raise RuntimeError(f"Native handoff failed: exit={native.returncode}, stdout={native.stdout!r}, stderr={native.stderr!r}")
+        protocol = subprocess.run(
+            [str(capture), "-c", "import sys; print(sys.stdin.read()); print('native-stderr', file=sys.stderr); sys.exit(23)"],
+            env=env, input="native-stdin", capture_output=True, text=True, timeout=30)
+        if protocol.returncode != 23 or protocol.stdout.strip() != "native-stdin" or protocol.stderr.strip() != "native-stderr":
+            raise RuntimeError(f"Native stdio/exit handoff failed: {protocol!r}")
         launched = subprocess.run(
             [str(pet), "--pet-dir", str(pack), "--no-collector", "--test-seconds", "2"],
             env=env, capture_output=True, text=True, timeout=30)
@@ -56,7 +61,8 @@ def main():
             raise RuntimeError("A helper invocation started an observer.")
         result = {
             "passed": True, "platform": sys.platform, "model_calls": 0,
-            "native_cli_handoff": True, "packaged_qt_start_and_exit": True,
+            "native_cli_handoff": True, "native_stdio_and_exit_status": True,
+            "packaged_qt_start_and_exit": True,
             "synthetic_sprite_only": True, "interactive_desktop_verified": False,
             "executables": {
                 str(path.relative_to(dist)): hashlib.sha256(path.read_bytes()).hexdigest()
