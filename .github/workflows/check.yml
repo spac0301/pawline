@@ -38,6 +38,11 @@ jobs:
             requirements-windows.lock
       - name: Install test dependencies
         run: python -m pip install -r requirements-windows.lock
+      - name: Install Qt shared libraries on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libegl1 libopengl0
       - name: Unit and local transport tests
         run: python -B -m unittest discover -s tests -p "test_*.py" -v
       - name: Synthetic Qt widget checks
