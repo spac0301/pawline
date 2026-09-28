@@ -24,11 +24,25 @@ submitted pets. This repository links to the original distribution and does not
 include or relicense the sprite. See [PET_ASSET_NOTICE.md](PET_ASSET_NOTICE.md)
 for the source, matching file hashes, and review date.
 
-## Runtime dependencies
+## Windows runtime dependencies
 
-The source distribution lists Python dependencies in `requirements.lock` and
-`requirements-windows.lock`; it does not include their installed binary packages.
-Those packages have their own licenses. Windows executable bundles must retain
-the notices delivered with bundled Python, PySide6/Qt, and other dependencies.
-The Windows build is an experimental recipient-verification path, not a claim
-that a native Windows release has already been checked.
+The portable Windows bundle includes Python and Qt/PySide6 Essentials, Pillow,
+cryptography, zstandard, cffi, psutil and Windows integration libraries.
+Their licenses are separate from Pawline's MIT license. Each application folder
+contains `licenses/` with runtime notices and `runtime-packages.json`.
+
+Qt/PySide6/Shiboken 6.11.2 are used under LGPLv3. DLLs are separate, replaceable
+files; no restriction is imposed on modification, replacement, or reverse
+engineering for debugging modifications to these libraries. Pawline's source
+and build scripts are public. Exact upstream source archives, checked while
+preparing this release, are linked in [Qt-SOURCES.json](assets/licenses/Qt-SOURCES.json).
+The unmodified license texts and third-party notices from those source archives
+are in [Qt notices](assets/licenses/Qt-6.11.2-NOTICES.txt).
+These source links provide the corresponding upstream code for the libraries;
+no Qt or PySide source changes are made by Pawline.
+
+Unused Qt Addons, including PDF and Virtual Keyboard, are excluded from the
+Windows build. Their presence is checked before publishing the bundle.
+Python's license and dependency wheel notices are copied from the build runtime.
+The source ZIP lists dependencies rather than redistributing their installed
+binary packages.
