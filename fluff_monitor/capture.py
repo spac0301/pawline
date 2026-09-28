@@ -18,6 +18,7 @@ import time
 
 from . import live, proxy, storage
 from . import __version__
+from .platform_support import native_library_search_path
 
 PUBLISH_INTERVAL = 1.0
 MAX_QUEUE_ITEMS = 512
@@ -196,6 +197,39 @@ def configure_cli(argv):
     return 0
 
 
+def run_native_cli(binary, args, env, *, replace_process=False):
+    """Keep stdio and exit status attached to the caller on both platforms."""
+    if replace_process and sys.platform != "win32":
+        return os.execve(binary, [binary, *args], env)
+    # Windows execve exits the wrapper before its child finishes. Popen owns
+    # the child until completion and handles Windows argv quoting and pipes.
+    with native_library_search_path():
+        child = subprocess.Popen(
+            [binary, *args], env=env, stdin=sys.stdin,
+            stdout=sys.stdout, stderr=sys.stderr,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0)
+    previous = {}
+    def forward(sig, _):
+        if child.poll() is None:
+            if sys.platform == "win32" and sig == signal.SIGINT:
+                try:
+                    child.send_signal(signal.CTRL_BREAK_EVENT)
+                except OSError:  # A GUI launcher may not have a console.
+                    child.terminate()
+            else:
+                child.send_signal(sig)
+    try:
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            previous[sig] = signal.signal(sig, forward)
+        return child.wait()
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+        if child.poll() is None:
+            child.terminate()
+            child.wait(timeout=5)
+
+
 def main(argv=None):
     args = list(sys.argv[1:] if argv is None else argv)
     if args[:1] == ["--fluff-configure-cli"]:
@@ -210,7 +244,7 @@ def main(argv=None):
     if not observe_desktop or "app-server" not in args:
         # Browser/config helpers must reach the real CLI and its policy checks
         # without starting another observer or replacing desktop.json.
-        return os.execve(binary, [binary, *args], env)
+        return run_native_cli(binary, args, env, replace_process=True)
     if any(env.get(key) for key in ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy")):
         print("Fluff capture requires a direct upstream connection. An existing proxy is configured; refusing to overwrite or bypass it.", file=sys.stderr)
         return 1
@@ -221,27 +255,14 @@ def main(argv=None):
     transport = proxy.InterceptProxy(ca, on_message=capture.feed, on_event=capture.event,
         upstream_context=upstream_context,
         intercept_hosts={os.environ.get("CODEX_ROUTING_CAPTURE_HOST", "chatgpt.com")}, require_auth=True)
-    child = None
     try:
         transport.start()
         add, drop = transport.env()
         for key in drop:
             env.pop(key, None)
         env.update(add)
-        child = subprocess.Popen([binary, *args], env=env, stdin=sys.stdin,
-                                 stdout=sys.stdout, stderr=sys.stderr)
-
-        def forward(sig, _):
-            if child.poll() is None:
-                child.send_signal(sig)
-
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            signal.signal(sig, forward)
-        return child.wait()
+        return run_native_cli(binary, args, env)
     finally:
-        if child is not None and child.poll() is None:
-            child.terminate()
-            child.wait(timeout=5)
         transport.stop()
         capture.close()
         ca.close()

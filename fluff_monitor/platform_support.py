@@ -2,9 +2,39 @@
 from __future__ import annotations
 
 import os
+from contextlib import contextmanager
 from pathlib import Path
 import sys
 import uuid
+
+
+@contextmanager
+def native_library_search_path():
+    """Do not pass PyInstaller's private DLL directory to an external program.
+
+    See PyInstaller's documented Windows external-program launch boundary:
+    https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#launching-external-programs-from-the-frozen-application
+    """
+    if sys.platform != "win32" or not getattr(sys, "frozen", False):
+        yield
+        return
+    import ctypes
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.GetDllDirectoryW.argtypes = [ctypes.c_uint32, ctypes.c_wchar_p]
+    kernel.GetDllDirectoryW.restype = ctypes.c_uint32
+    kernel.SetDllDirectoryW.argtypes = [ctypes.c_wchar_p]
+    kernel.SetDllDirectoryW.restype = ctypes.c_bool
+    size = kernel.GetDllDirectoryW(0, None)
+    previous = ctypes.create_unicode_buffer(size + 1)
+    if size:
+        kernel.GetDllDirectoryW(len(previous), previous)
+    if not kernel.SetDllDirectoryW(None):
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        yield
+    finally:
+        if not kernel.SetDllDirectoryW(previous.value or None):
+            raise ctypes.WinError(ctypes.get_last_error())
 
 
 def cli_argument(args, *flags):
