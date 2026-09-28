@@ -30,8 +30,8 @@
     },
     {
       "path": "INSTALL.md",
-      "sha256": "64a299076b085285694232979a05731e091fa82195e7f5e26a4ee6cf63e10589",
-      "bytes": 3377
+      "sha256": "798a374cdccd32f867105827b6da06ddc7b2e3d85c2a28627b5bebe5a8251094",
+      "bytes": 2310
     },
     {
       "path": "LICENSE",
@@ -40,13 +40,13 @@
     },
     {
       "path": "PET_ASSET_NOTICE.md",
-      "sha256": "e64fcc183596b61052487bafc8596cb1f6984cad6d1346210095c66e3ed5628b",
-      "bytes": 3083
+      "sha256": "afa99b62ec8c3ad94f48c5560d86e6f1eb939976fd6a2999380f102b77a16570",
+      "bytes": 3319
     },
     {
       "path": "README.md",
-      "sha256": "696510c86ae24aa104f75f00df25a9fe32963c619741ab4cb238362b6f644221",
-      "bytes": 1590
+      "sha256": "3bd3f1058bf50b9ed5ed79e6fd44c6d8eeb4cf8c7c98031bfb75108a531e9982",
+      "bytes": 2230
     },
     {
       "path": "SECURITY.md",
@@ -117,6 +117,11 @@
       "path": "assets/providers/openai.svg",
       "sha256": "6b1ea0cb7a93e948ec18e550868357c7d7c88db74a9f766441b6598bb4ed3fad",
       "bytes": 2539
+    },
+    {
+      "path": "assets/screenshots/overview.png",
+      "sha256": "8914ff5ad2854bc7c23e569d260d788e2d017803a1647cdf7100a4edc7af4f85",
+      "bytes": 70877
     },
     {
       "path": "assets/screenshots/panel-dark.png",
