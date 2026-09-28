@@ -20,6 +20,15 @@ def main():
     for executable in (pet, capture):
         if not executable.is_file():
             raise RuntimeError(f"Missing executable: {executable}")
+        for notice in ("Python-LICENSE.txt", "Qt-6.11.2-NOTICES.txt", "Qt-SOURCES.json",
+                       "runtime-packages.json"):
+            if not (executable.parent / "licenses" / notice).is_file():
+                raise RuntimeError(f"Missing runtime notice: {notice}")
+    unexpected = [str(path.relative_to(dist)) for path in dist.rglob("*")
+                  if path.is_file() and any(part in path.name.lower()
+                                           for part in ("virtualkeyboard", "qt6pdf", "qpdf."))]
+    if unexpected:
+        raise RuntimeError(f"Unused Qt Addons entered the bundle: {unexpected}")
     with tempfile.TemporaryDirectory() as temporary:
         root = Path(temporary)
         pack = root / "pet"
@@ -63,6 +72,7 @@ def main():
             "passed": True, "platform": sys.platform, "model_calls": 0,
             "native_cli_handoff": True, "native_stdio_and_exit_status": True,
             "packaged_qt_start_and_exit": True,
+            "runtime_notices_included": True, "unused_qt_addons_absent": True,
             "synthetic_sprite_only": True, "interactive_desktop_verified": False,
             "executables": {
                 str(path.relative_to(dist)): hashlib.sha256(path.read_bytes()).hexdigest()
