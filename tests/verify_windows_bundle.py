@@ -17,6 +17,7 @@ def main():
     output = Path(sys.argv[2]).resolve()
     pet = dist / "pawline/pawline.exe"
     capture = dist / "pawline-capture/pawline-capture.exe"
+    required_python = (Path(__file__).resolve().parents[1] / "windows/python-version.txt").read_text().strip()
     for executable in (pet, capture):
         if not executable.is_file():
             raise RuntimeError(f"Missing executable: {executable}")
@@ -24,6 +25,12 @@ def main():
                        "runtime-packages.json"):
             if not (executable.parent / "licenses" / notice).is_file():
                 raise RuntimeError(f"Missing runtime notice: {notice}")
+        runtime = json.loads((executable.parent / "licenses/runtime-packages.json").read_text())
+        if runtime["python"] != required_python:
+            raise RuntimeError(f"Unexpected bundled Python version: {runtime['python']}")
+        major, minor, *_ = required_python.split(".")
+        if not (executable.parent / "_internal" / f"python{major}{minor}.dll").is_file():
+            raise RuntimeError("The pinned Python runtime DLL is missing.")
     unexpected = [str(path.relative_to(dist)) for path in dist.rglob("*")
                   if path.is_file() and any(part in path.name.lower()
                                            for part in ("virtualkeyboard", "qt6pdf", "qpdf."))]
@@ -70,6 +77,7 @@ def main():
             raise RuntimeError("A helper invocation started an observer.")
         result = {
             "passed": True, "platform": sys.platform, "model_calls": 0,
+            "bundled_python": required_python,
             "native_cli_handoff": True, "native_stdio_and_exit_status": True,
             "packaged_qt_start_and_exit": True,
             "runtime_notices_included": True, "unused_qt_addons_absent": True,
