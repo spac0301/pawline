@@ -1,5 +1,12 @@
 """Shared display text. Rendering and OS-specific widgets do not decide metrics."""
+import re
 import time
+
+
+def model_text(value):
+    """Display Claude version separators as decimals; leave source IDs intact."""
+    return re.sub(r"^(claude-(?:opus|sonnet|haiku)-\d+)-(\d{1,2})(?=-|$)",
+                  r"\1.\2", value or "")
 
 
 def menu_actions(surface, *, theme="dark", pinned=False, walking=False):

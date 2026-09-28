@@ -23,7 +23,7 @@ from .activity import ActivityCollector
 from .catalog import SnapshotCatalog
 from .layout import beside_position
 from .platform_support import lock_exclusive
-from .presentation import usage_text, route_status, menu_actions
+from .presentation import usage_text, route_status, menu_actions, model_text
 from .pet_state import MismatchAlerts
 from .storage import SnapshotReader, atomic_json, read_json, state_dir
 from .views import desktop_view, claude_view
@@ -323,8 +323,8 @@ class ProviderSection(QWidget):
             requested, effort = value.get("requested_model"), value.get("requested_effort")
             status, served = value.get("label", "대기"), value.get("served") or "기록 대기"
             tone = "blue" if value.get("state")=="running" else "neutral"
-        self.requested.setText((requested or "—")+(" · "+effort if effort else ""))
-        self.served.setText(served)
+        self.requested.setText((model_text(requested) or "—")+(" · "+effort if effort else ""))
+        self.served.setText(model_text(served))
         self.status.setText(status)
         light = self.owner.settings.get("theme") == "light"
         colors = dict(neutral="#686b75",blue="#486798",waiting="#886020",bad="#b44653") if light else dict(neutral="#a9aab1",blue="#a4bbed",waiting="#e4c18b",bad="#f09b9f")

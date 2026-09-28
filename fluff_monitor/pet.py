@@ -24,7 +24,7 @@ from gi.repository import GdkPixbuf
 from . import views
 from .storage import atomic_json, read_json, state_dir, SnapshotReader
 from .catalog import display_title, SnapshotCatalog
-from .presentation import age_text, usage_text, route_status, menu_actions
+from .presentation import age_text, usage_text, route_status, menu_actions, model_text
 from .pet_state import MismatchAlerts, MotionCycle
 from .menu import MenuWindow, TitleReveal, menu_action, beside_position
 
@@ -612,7 +612,7 @@ class Panel(Gtk.Window):
         self.session_button.get_accessible().set_description(title+" · "+("선택한 작업 고정" if selected else "최근 요청 자동 선택"))
         entries=[]
         for item in route.get("sessions") or []:
-            detail=item.get("requested") or "요청 대기"
+            detail=model_text(item.get("requested")) or "요청 대기"
             if item.get("effort"):detail+=" · "+item["effort"]
             entries.append(dict(key=item["thread_id"],title=display_title(item.get("title")) or "이름 없는 작업",detail=detail))
         signature=(selected,tuple((x["key"],x["title"],x["detail"]) for x in entries))
@@ -668,7 +668,7 @@ class Panel(Gtk.Window):
         selected=self.settings.get("claude_session")
         entries=[]
         for item in value.get("sessions") or []:
-            detail=item.get("requested_model") or "담당 연결 대기"
+            detail=model_text(item.get("requested_model")) or "담당 연결 대기"
             if item.get("requested_effort"):detail+=" · "+item["requested_effort"]
             entries.append(dict(key=item.get("selection_key",item.get("session_id")),
                                 title=item.get("title") or "Claude 작업",detail=detail))
@@ -696,12 +696,12 @@ class Panel(Gtk.Window):
         children = route.get("children") or {}
         children_detail = "\n".join(f"{item['name']} · {item['state']}" for item in children.get("details", []))
         self.claude_models.set_visible(bool(claude.get("session_id")))
-        request = claude.get("requested_model") or "확인 안 됨"
+        request = model_text(claude.get("requested_model")) or "확인 안 됨"
         if claude.get("requested_effort"):
             request += " · " + claude["requested_effort"]
         self.claude_requested.set_text(request)
         self.claude_requested.set_tooltip_text("현재 CLI의 시작 모델·추론 설정입니다. 실행 중 설정을 바꾸면 실제 응답 로그의 모델과 다를 수 있습니다.")
-        self.claude_served.set_text(claude.get("served") or "기록 대기")
+        self.claude_served.set_text(model_text(claude.get("served")) or "기록 대기")
         self.claude_served.set_tooltip_text("Claude의 응답 로그에 기록된 모델명입니다.")
         self.claude_title.set_text(claude.get("title") or "작업 선택")
         self.claude_button.get_accessible().set_description(claude.get("title") or "현재 작업 없음")
@@ -722,12 +722,12 @@ class Panel(Gtk.Window):
             self.chip.set_tooltip_text(route.get("detail"))
         if children.get("running"):
             self.chip.set_tooltip_text(self.chip.get_tooltip_text() + "\n" + children_detail)
-        requested = route.get("requested") or "—"
+        requested = model_text(route.get("requested")) or "—"
         if route.get("effort"):
             requested += " · " + str(route["effort"])
         self.requested.set_text(requested)
         self.requested.set_tooltip_text(requested)
-        self.served.set_text(route.get("served") or ("모델명 미수집" if verdict == "OBSERVATION_GAP" else "—"))
+        self.served.set_text(model_text(route.get("served")) or ("모델명 미수집" if verdict == "OBSERVATION_GAP" else "—"))
         self.served.set_tooltip_text(route.get("served") or "응답 모델명을 아직 확인하지 못했습니다")
         stamp = time.strftime("%H:%M:%S", time.localtime(at)) if at else ""
         receiving = route.get("active") and route.get("connected") and not route.get("capture_lost")
