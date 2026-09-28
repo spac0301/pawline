@@ -289,6 +289,7 @@ class Panel(Gtk.Window):
         self.session_signature = None
         self.claude_signature = None
         self.title_hovered = set()
+        self.reveal_labels = {}
         self.title_timer = None
         self.set_title("Fluff · 라우팅 모니터")
         self.set_wmclass("codex-routing-panel", "Codex-routing-pet")
@@ -326,7 +327,17 @@ class Panel(Gtk.Window):
             caption.set_size_request(caption_width, -1)
             caption.set_max_width_chars(1)
             caption.get_style_context().add_class(style)
-            box.pack_start(caption, False, False, 0)
+            if style == "chip":
+                hover = Gtk.EventBox()
+                hover.set_visible_window(False)
+                hover.add(caption)
+                hover.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK)
+                hover.connect("enter-notify-event", lambda w, e: self._title_hover(w, True, e))
+                hover.connect("leave-notify-event", lambda w, e: self._title_hover(w, False, e))
+                self.reveal_labels[hover] = caption
+                box.pack_start(hover, False, False, 0)
+            else:
+                box.pack_start(caption, False, False, 0)
             return box
 
         def table_rows(values):
@@ -508,8 +519,9 @@ class Panel(Gtk.Window):
             return False
         button = next(iter(self.title_hovered), None)
         if button:
-            title = self.session_title if button is self.session_button else self.claude_title
-            self.title_reveal.reveal(button, title.get_text())
+            status = self.reveal_labels.get(button)
+            title = status if status is not None else (self.session_title if button is self.session_button else self.claude_title)
+            self.title_reveal.reveal(button, title.get_text(), source=status)
         elif not self.title_reveal.hovered:
             self.title_reveal.hide()
         return False
@@ -746,6 +758,13 @@ class Panel(Gtk.Window):
         self._chip(self.claude, claude["label"], "blue" if claude["state"] == "running" else "neutral")
         self.claude.set_tooltip_text("Claude 로컬 로그 · " + activity_text)
         self.claude_brand.set_tooltip_text("Anthropic · Claude Code\n" + self.claude_requested.get_tooltip_text())
+        for status in (self.chip, self.claude):
+            status.get_accessible().set_description(status.get_tooltip_text() or status.get_text())
+            status.set_has_tooltip(False)
+        if self.title_reveal.get_visible():
+            source = self.reveal_labels.get(self.title_reveal.anchor)
+            if source is not None:
+                self.title_reveal.reveal(self.title_reveal.anchor, source.get_text(), source=source)
 
 class Fluff(Overlay):
     def __init__(self, view, settings, panel):

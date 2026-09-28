@@ -81,7 +81,7 @@ def menu_action(text=""):
 
 
 class TitleReveal(Gtk.Window):
-    """Extend only the hovered title row, without reallocating the parent card."""
+    """Reveal a clipped title or status without reallocating the parent card."""
     def __init__(self, owner, changed):
         super().__init__(type=Gtk.WindowType.TOPLEVEL)
         self.owner, self.changed = owner, changed
@@ -112,10 +112,11 @@ class TitleReveal(Gtk.Window):
         self.title.set_single_line_mode(True)
         self.title.set_ellipsize(Pango.EllipsizeMode.END)
         self.title.set_max_width_chars(1)
-        arrow = Gtk.Image.new_from_icon_name("pan-down-symbolic", Gtk.IconSize.MENU)
-        arrow.set_pixel_size(10)
+        self.arrow = Gtk.Image.new_from_icon_name("pan-down-symbolic", Gtk.IconSize.MENU)
+        self.arrow.set_pixel_size(10)
+        self.arrow.set_no_show_all(True)
         content.pack_start(self.title, True, True, 0)
-        content.pack_start(arrow, False, False, 0)
+        content.pack_start(self.arrow, False, False, 0)
         self.strip.add(content)
         self.add(self.strip)
         self.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK | Gdk.EventMask.BUTTON_PRESS_MASK)
@@ -137,7 +138,7 @@ class TitleReveal(Gtk.Window):
         return False
 
     def _click(self, _, event):
-        if event.button == 1 and self.anchor:
+        if event.button == 1 and isinstance(self.anchor, Gtk.ToggleButton):
             anchor = self.anchor
             self.hide()
             anchor.set_active(True)
@@ -151,12 +152,22 @@ class TitleReveal(Gtk.Window):
         self.hovered = False
         self.owner.hovered.discard("title")
 
-    def reveal(self, anchor, title):
+    def reveal(self, anchor, title, source=None):
         if self.get_visible() and self.anchor is anchor and self.title.get_text() == title:
             return
         self._stop()
         self.anchor = anchor
         self.title.set_text(title)
+        self.arrow.set_visible(source is None)
+        attributes = None
+        if source is not None:
+            style = source.get_style_context()
+            color = style.get_color(Gtk.StateFlags.NORMAL)
+            attributes = Pango.AttrList()
+            attributes.insert(Pango.attr_font_desc_new(style.get_font(Gtk.StateFlags.NORMAL)))
+            attributes.insert(Pango.attr_foreground_new(*(round(channel * 65535)
+                                                       for channel in (color.red, color.green, color.blue))))
+        self.title.set_attributes(attributes)
         px, py = self.owner.get_position()
         dx, dy = anchor.translate_coordinates(self.owner, 0, 0)
         allocation = anchor.get_allocation()
@@ -164,20 +175,30 @@ class TitleReveal(Gtk.Window):
         # same column as its compact label underneath.
         inset = 8
         x, y = px + dx, py + dy
-        natural = self.title.create_pango_layout(title).get_pixel_size()[0] + 18 + 2*inset
+        measured = source if source is not None else self.title
+        text_width = measured.create_pango_layout(title).get_pixel_size()[0]
+        if source is not None and text_width <= source.get_allocated_width():
+            self.hide()
+            return
+        height = allocation.height if source is None else max(24, allocation.height)
+        initial = allocation.width if source is None else allocation.width + 2*inset
+        if source is not None:
+            x -= inset
+            y -= (height - allocation.height) // 2
+        natural = text_width + (18 if source is None else 0) + 2*inset
         area = self.get_display().get_monitor_at_point(x, y).get_workarea()
         limit = min(420, area.x + area.width - x)
         pet = self.owner.pet
-        if pet and y < pet.sprite_y + pet.view.height and y + allocation.height > pet.sprite_y:
+        if pet and y < pet.sprite_y + pet.view.height and y + height > pet.sprite_y:
             if x < pet.sprite_x:
                 limit = min(limit, pet.sprite_x - 12 - x)
         target = min(natural, limit)
-        if target <= allocation.width:
+        if target <= initial:
             self.hide()
             return
-        current = allocation.width
-        self.strip.set_size_request(current, allocation.height)
-        self.resize(current, allocation.height)
+        current = initial
+        self.strip.set_size_request(current, height)
+        self.resize(current, height)
         self.move(x, y)
         context = self.get_style_context()
         if self.owner.settings.get("theme") == "light":
@@ -189,8 +210,8 @@ class TitleReveal(Gtk.Window):
             nonlocal current
             delta = target - current
             current = target if abs(delta) <= 2 else current + round(delta * .4)
-            self.strip.set_size_request(current, allocation.height)
-            self.resize(current, allocation.height)
+            self.strip.set_size_request(current, height)
+            self.resize(current, height)
             self.move(x, y)
             if current == target:
                 self.timer = None

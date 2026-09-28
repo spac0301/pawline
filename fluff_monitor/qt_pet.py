@@ -48,6 +48,8 @@ def layout(widget, kind, margins=(0, 0, 0, 0), spacing=0):
 
 class Text(QLabel):
     """Plain, elided text: task names cannot become rich text or external links."""
+    hovered = Signal(bool)
+
     def __init__(self, text="", parent=None):
         super().__init__(text, parent)
         self.setTextFormat(Qt.TextFormat.PlainText)
@@ -60,6 +62,14 @@ class Text(QLabel):
         painter.setPen(self.palette().color(self.foregroundRole()))
         painter.drawText(self.rect(), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                          self.fontMetrics().elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width()))
+
+    def enterEvent(self, event):
+        self.hovered.emit(True)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.hovered.emit(False)
+        super().leaveEvent(event)
 
     def setFixedWidth(self, width):
         # Fixed columns must reserve their width in QBoxLayout; an Ignored
@@ -106,11 +116,11 @@ class TitleButton(QPushButton):
         self.setMinimumWidth(0)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         self.caption = Text()
-        arrow = Text("⌄")
-        arrow.setFixedWidth(10)
+        self.arrow = Text("⌄")
+        self.arrow.setFixedWidth(10)
         box = layout(self, QHBoxLayout, (INSET, 0, INSET, 0), 4)
         box.addWidget(self.caption, 1)
-        box.addWidget(arrow)
+        box.addWidget(self.arrow)
 
     def set_title(self, text):
         self.caption.setText(text)
@@ -221,23 +231,39 @@ class TitlePopup(Surface):
 
     def _click(self):
         self.hide()
-        if self.anchor:
+        if isinstance(self.anchor, TitleButton):
             self.anchor.click()
 
     def reveal(self, anchor):
+        is_title = isinstance(anchor, TitleButton)
+        source = anchor.caption if is_title else anchor
+        if self.isVisible() and self.anchor is anchor and self.button.caption.text() == source.text():
+            return
         self.anchor = anchor
-        self.button.set_title(anchor.caption.text())
+        text_width = source.fontMetrics().horizontalAdvance(source.text())
+        if text_width <= source.width():
+            self.hide()
+            return
+        self.button.set_title(source.text())
+        self.button.arrow.setVisible(is_title)
+        self.button.caption.setStyleSheet("" if is_title else source.styleSheet())
         pos = anchor.mapToGlobal(QPoint(0, 0))
-        target = self.button.caption.fontMetrics().horizontalAdvance(anchor.caption.text()) + 34
+        initial = anchor.width()
+        if not is_title:
+            pos -= QPoint(INSET, (24-anchor.height())//2)
+            initial += 2*INSET
+            self.button.caption.setStyleSheet(
+                f'font-size: {source.font().pixelSize()}px; color: {source.palette().color(source.foregroundRole()).name()};')
+        target = text_width + (34 if is_title else 2*INSET)
         area = self.owner.screen_area()
         target = min(420, target, area.x+area.width-pos.x())
         px, py, pw, ph = self.owner.pet_rect()
         if pos.y() < py+ph and pos.y()+24 > py and pos.x() < px:
             target = min(target, px-GAP-pos.x())
-        if target <= anchor.width():
+        if target <= initial:
             self.hide()
             return
-        start = QRect(pos.x(), pos.y(), anchor.width(), 24)
+        start = QRect(pos.x(), pos.y(), initial, 24)
         self.setGeometry(start)
         self.show()
         self.animation.stop()
@@ -280,6 +306,8 @@ class ProviderSection(QWidget):
         self.requested = self.add_row(box, "요청" if provider == "gpt" else "설정", 17)
         self.served = self.add_row(box, "응답", 17)
         self.status, self.cache = Text("대기"), Text("")
+        self.status.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+        self.status.hovered.connect(lambda entered: owner.hover_title(self.status, entered))
         self.status.setObjectName("muted")
         self.cache.setObjectName("muted")
         footer = QWidget()
@@ -463,6 +491,8 @@ class Panel(Surface):
         self.route, self.claude = route, claude
         self.gpt.update_data(route)
         self.anthropic.update_data(claude)
+        if self.title_popup.isVisible() and isinstance(self.title_popup.anchor, Text):
+            self.title_popup.reveal(self.title_popup.anchor)
 
 
 class PetWindow(QWidget):
