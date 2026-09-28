@@ -1,17 +1,22 @@
 {
   "name": "Pawline",
   "version": "0.2.4",
-  "packaging_revision": "public-source-20260929",
+  "packaging_revision": "public-source-20260929-release",
   "files": [
     {
       "path": ".github/workflows/check.yml",
-      "sha256": "05597a68611b056ae57752adf33804fbe1d78d72a71c0dad0b768cb7e265a22b",
-      "bytes": 1422
+      "sha256": "0a09d70e2f9e4c73dfa1139fc14c38fdc04e12edf155e38483f58adcbdb7d7b6",
+      "bytes": 1628
     },
     {
       "path": ".github/workflows/windows-build.yml",
       "sha256": "9af359a825e955bc6de8c8d1d30b90c43f65d13a6c8ca6f5d0ec6de8257df4ef",
       "bytes": 1411
+    },
+    {
+      "path": ".github/workflows/windows-installer.yml",
+      "sha256": "6a0bc4abb38684a9faf18f2da4ac9ffc4ff94909401b780dc9661a902a3c21c5",
+      "bytes": 1612
     },
     {
       "path": ".gitignore",
@@ -20,8 +25,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "2d25da06773249350d3c4c5cb72759d079f310ba29c9542ea31e24c7c97a8467",
-      "bytes": 4824
+      "sha256": "902918f4f90aa1835fab39b6a423ebe8615afc7d3bb034e84e293b69b29aafc1",
+      "bytes": 5308
     },
     {
       "path": "INSTALL.md",
@@ -40,8 +45,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "2c3e6ddcfbf21c3daddef2b32a05453ba4f4ae3f3a983fc95f148aaed2b02ada",
-      "bytes": 13141
+      "sha256": "696510c86ae24aa104f75f00df25a9fe32963c619741ab4cb238362b6f644221",
+      "bytes": 1590
     },
     {
       "path": "SECURITY.md",
@@ -50,8 +55,8 @@
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "sha256": "62b81a42779eeff24730179ef07b3d5ef0ff7472e24483896988a4ae28df0a79",
-      "bytes": 2510
+      "sha256": "34204a3b88b67b8f8d7dc2f0139a451093bc57a9f3aed703870101ae9f412ce1",
+      "bytes": 3633
     },
     {
       "path": "UPSTREAM-DETECTOR-LICENSE",
@@ -60,13 +65,13 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "548fb51519342cdbf4bb67b5ed97b609a51cee392d8c793bfe2bfb7cd9fdfd41",
-      "bytes": 3481
+      "sha256": "007fbf15585f102f95c1632c4c87e782d7fa2642b8054872ea56839c2c9d26ee",
+      "bytes": 2550
     },
     {
       "path": "WINDOWS.md",
-      "sha256": "c4289bb3b313bfc1c9f12f2ed074b9681dd0970e4dbdf2df9db2e6b610019ac5",
-      "bytes": 5257
+      "sha256": "982b6e98433b02b95d442782f9d8c7eca46b943b39f87b3f3512fd13a3e26536",
+      "bytes": 4329
     },
     {
       "path": "assets/fonts/Pretendard-LICENSE.txt",
@@ -82,6 +87,16 @@
       "path": "assets/fonts/UPSTREAM.json",
       "sha256": "8d4c7544826d287f0073ac4951640ff8af8ee8ec952b5f652f2253290b38ee4b",
       "bytes": 162
+    },
+    {
+      "path": "assets/licenses/Qt-6.11.2-NOTICES.txt",
+      "sha256": "0fb75166ff5898f5a6cbd0c0587e9efcc74f40fa50a75f1b998fc13de6ff4a59",
+      "bytes": 1572214
+    },
+    {
+      "path": "assets/licenses/Qt-SOURCES.json",
+      "sha256": "db150a5257bee6ca72069bf095e2e1c6e44c5df97213c49820e82eeb1ad43ad7",
+      "bytes": 1026
     },
     {
       "path": "assets/providers/OPENAI-APPS-SDK-UI-LICENSE",
@@ -104,6 +119,21 @@
       "bytes": 2539
     },
     {
+      "path": "assets/screenshots/panel-dark.png",
+      "sha256": "b1029bb49e13c6cea4e5d8040c71432b81a54b8e40b7d3393c12653ea24f5bd8",
+      "bytes": 47769
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "fde9420455182174c317bb7445f215beff4d0eefced51530258180a9bee6f947",
+      "bytes": 10900
+    },
+    {
+      "path": "docs/usage.md",
+      "sha256": "ed76398a68d05cae0a8ded25b151e7a888ce43d2c2ffd5cfa26d734ea089fc74",
+      "bytes": 1706
+    },
+    {
       "path": "fluff-monitor-activity.service",
       "sha256": "5c58aa44217085f5ce64b23e4e676dfe6b972649c9c314708643fcc7df70de89",
       "bytes": 364
@@ -120,8 +150,8 @@
     },
     {
       "path": "fluff_monitor/capture.py",
-      "sha256": "cfd2acdd6c46a95e37ea18ff741124ca09164be63d62a04a40590ae439db0291",
-      "bytes": 10660
+      "sha256": "40f3f236cff71c4d4447958f71eb8e48cca671b31c76e7a85aaec794c693100f",
+      "bytes": 11689
     },
     {
       "path": "fluff_monitor/catalog.py",
@@ -145,13 +175,13 @@
     },
     {
       "path": "fluff_monitor/menu.py",
-      "sha256": "d1cbc8439b0d0ebcd15429fc33c60704c62ddce93161cc38c2a06d39f0241c5d",
-      "bytes": 16220
+      "sha256": "830a65258a05f5fa2acc976a8348ce3d563d862919e3e85f23cde3e8eaefd5dd",
+      "bytes": 17345
     },
     {
       "path": "fluff_monitor/pet.py",
-      "sha256": "29bbbbb6aad8bba3ee7376d922cc23685d53c0c2eb14a9608a421e242b5cf413",
-      "bytes": 46549
+      "sha256": "de354c7da9e8ac15e323b443e1687a910c74358c891f65f04d6d87e95fbf1812",
+      "bytes": 47784
     },
     {
       "path": "fluff_monitor/pet_state.py",
@@ -160,13 +190,13 @@
     },
     {
       "path": "fluff_monitor/platform_support.py",
-      "sha256": "08c4eea6f112c2577b7b5c35c94f7b3c39b65bc693d5575b992668602ccbcc49",
-      "bytes": 4392
+      "sha256": "7fa6a02868b5549ab54b030b11a33b1030db07457821561a45c718338e03d486",
+      "bytes": 5610
     },
     {
       "path": "fluff_monitor/presentation.py",
-      "sha256": "75f801e3dde03c93d3a4b0952b374ae505d9a93270dfdce41d35d2b7bd42d6e7",
-      "bytes": 2983
+      "sha256": "0d7fab761a1691b8aece5765320a4bfcbd77013bb767749c7a7ea99cde23b894",
+      "bytes": 3216
     },
     {
       "path": "fluff_monitor/proxy.py",
@@ -175,8 +205,8 @@
     },
     {
       "path": "fluff_monitor/qt_pet.py",
-      "sha256": "0a7e14984d7113e1e83f6281138f17d49093c1dba170cce931237d5293153bc5",
-      "bytes": 27109
+      "sha256": "7bb1bcd0984873e54f91ca83da67f81939021ccbd6f0466cf5b201d520aebf6a",
+      "bytes": 28524
     },
     {
       "path": "fluff_monitor/records.py",
@@ -185,8 +215,8 @@
     },
     {
       "path": "fluff_monitor/storage.py",
-      "sha256": "0f9915b069cf3ec781096876a9ecb79aaf5151eb1d4aa9de35dea1976bccfc6c",
-      "bytes": 2267
+      "sha256": "0d89b9885419d9c9aaf756174db9d01b0993762c500a0174ee75b0c6292ba5ee",
+      "bytes": 2302
     },
     {
       "path": "fluff_monitor/views.py",
@@ -210,13 +240,13 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "dbc9dd6a67c3b3fffefc308cf3e57b21ddfdda3769d86f9490ba614e512f323c",
-      "bytes": 494
+      "sha256": "0a90db6b33526c908b387429ca3ff3a19c6f6f63f49fe84f1b81c540ac78c8b8",
+      "bytes": 505
     },
     {
       "path": "requirements-windows.lock",
-      "sha256": "b02af32394fb5b5ea1ef357137e916137a6312776e276786df48b53c46827400",
-      "bytes": 195
+      "sha256": "7dc8042d8c278c18fd9adeec91af6d62f152ca2e67942981750e4e801ce28570",
+      "bytes": 156
     },
     {
       "path": "requirements.lock",
@@ -230,8 +260,8 @@
     },
     {
       "path": "tests/test_activity_usage.py",
-      "sha256": "3b1d967972ddc164d4287c041ca03c839e90dd5bea51bbe171bbbb6bd76137f1",
-      "bytes": 11936
+      "sha256": "34c9ec48408bfa3eef9a74ebc36879e856d9fa0290006087f670548c22e5c516",
+      "bytes": 11993
     },
     {
       "path": "tests/test_claude_resume.py",
@@ -240,13 +270,13 @@
     },
     {
       "path": "tests/test_cli_handoff.py",
-      "sha256": "5c1790a71a6b101aaae3c364c24a39da8de2308969286850669e4ff9e9dedd13",
-      "bytes": 3432
+      "sha256": "3ab1113b6c0dafe8f768b2e88a3c830942e0300af94fd31279c9bea0425a0c26",
+      "bytes": 4791
     },
     {
       "path": "tests/test_desktop_capture.py",
-      "sha256": "de2066e605e2550ca809833ee22be2b66b1e9da2fa3f5f6c4b3dafe4b14e591e",
-      "bytes": 14938
+      "sha256": "03a018a8ad32a9a472189031f556daaa2268cd96e930900f94c5386ca079ca19",
+      "bytes": 15125
     },
     {
       "path": "tests/test_http_recovery.py",
@@ -285,18 +315,18 @@
     },
     {
       "path": "tests/verify_activity_ui.py",
-      "sha256": "2734fd76ef592255d587642dd5826f2fbbd08198145a82fc21e1aca8c6f4cfa2",
-      "bytes": 20721
+      "sha256": "1f798a9622573a080f800e1536e8d0848458cb74143eb7ea7d7721c0835168a8",
+      "bytes": 21809
     },
     {
       "path": "tests/verify_qt_ui.py",
-      "sha256": "dec28a28b177a7da16a1940ee1f568f63f4d4675dfd2dab82d593803c32e04c0",
-      "bytes": 7067
+      "sha256": "39e1ef49e01122bbd996acf62b486d62d2b1d03a55edb4f2336396c1e03b544d",
+      "bytes": 8370
     },
     {
       "path": "tests/verify_windows_bundle.py",
-      "sha256": "64012f3a276a0e9f615b807f8b54c13eef26a8631dd2a6e6abe0d1ceb792d484",
-      "bytes": 3182
+      "sha256": "d34f8f1fd1870b2315cf850ed0ade8674664ce2fba9a60e53c2c5a57fcae0bc0",
+      "bytes": 4439
     },
     {
       "path": "vendor/claude-pet/LICENSE",
@@ -434,9 +464,19 @@
       "bytes": 5863
     },
     {
+      "path": "windows/build-installer.ps1",
+      "sha256": "420ce8080412e7cf0efcfa1f7c9d9e00010c5a609db3c1e5a18fceee4b1afa2f",
+      "bytes": 890
+    },
+    {
       "path": "windows/build.ps1",
-      "sha256": "d1bb89c7fbe5a6e6b851375dcb8c265144b677fb8fcdd62cc2d75a444547166f",
-      "bytes": 1958
+      "sha256": "8e2e3c5c3e4bfc29eba18c2471210c2117c1095b80ab9ddd936eb5001b1e2c5f",
+      "bytes": 2420
+    },
+    {
+      "path": "windows/bundle_licenses.py",
+      "sha256": "16d89463f819c9fc8d594d1c06bb64670e4f1abddbef6eae319c01e533030a1a",
+      "bytes": 2394
     },
     {
       "path": "windows/capture_entry.py",
@@ -444,9 +484,24 @@
       "bytes": 178
     },
     {
+      "path": "windows/install-note.txt",
+      "sha256": "c0c0396dd68fda32be0bb51090c9b8e146d6d25f544356ac5ca47002bcd39168",
+      "bytes": 369
+    },
+    {
+      "path": "windows/pawline.iss",
+      "sha256": "0c85cc3a32d40256b0441111c9ce42bdaec2523ef7526d7b7235a1f31e8d9dda",
+      "bytes": 1112
+    },
+    {
       "path": "windows/pet_entry.py",
       "sha256": "077603267f7e916778811e3479e4d2f3043cd9ccf3984eef6fdfd0d88e3cde8a",
       "bytes": 174
+    },
+    {
+      "path": "windows/verify-installer.ps1",
+      "sha256": "f875433fd9a2665ce105fcd563a08efe50c5dee5470f079b99d1b24431733761",
+      "bytes": 1632
     },
     {
       "path": "windows/verify.cmd",
