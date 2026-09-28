@@ -11,6 +11,10 @@ An installation can now save its native executable path with
 Other helper invocations go to the real CLI without a new proxy or snapshot
 publisher. No browser security policy or approval requirement is modified.
 
+Windows packaging also fixes native CLI stdio/exit forwarding and inherited
+DLL search paths. Portable bundles use Qt Essentials, retain runtime licenses,
+and are checked for startup, native handoff, and unused Qt Addons.
+
 # 0.2.3 — separate information-window and pet menus
 
 Public source packaging adds the project MIT license, third-party notices,
