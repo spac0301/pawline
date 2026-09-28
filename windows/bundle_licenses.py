@@ -34,7 +34,9 @@ def main():
                     source = Path(dist.locate_file(file))
                     if source.is_file():
                         # Preserve subdirectories when a wheel has many licenses.
-                        relative = Path(*file.parts[1:]) if len(file.parts) > 1 else Path(file.name)
+                        relative = Path(*file.parts)
+                        if ".." in relative.parts or relative.is_absolute():
+                            raise RuntimeError(f"Unsafe license path in {dist.metadata['Name']}")
                         out = destination / relative
                         out.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(source, out)
