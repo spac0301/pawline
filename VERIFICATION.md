@@ -1,12 +1,12 @@
-# 검증 범위 · 0.2.5
+# 검증 범위 · 0.2.6
 
 ## Windows 배포본
 
-[빌드·실행 검사 기록](https://github.com/spac0301/pawline/actions/runs/36493844120)
+[빌드·실행 검사 기록](https://github.com/spac0301/pawline/actions/runs/36497935071)
 
-- 소스: `f6c608b03b2184d1243a095d2a0f9a9dd5b71d9a`
+- 소스: `64c33aa524b7aa7a573a9dc40f1d9f7fc58fc8e4`
 - Windows Server 2022 · Python 3.13.15 · x64에서 EXE 빌드 성공
-- 공통 검사 97개: 90개 통과, 다른 플랫폼 전용 7개 제외
+- 공통 검사 105개: 98개 통과, 다른 플랫폼 전용 7개 제외
 - GTK·Qt의 `claude-opus-5.5` 표시와 잘린 활동 상태의 펼치기·닫기·열 위치 유지 확인
 - Windows Qt 화면과 패키징된 EXE의 시작·종료 확인
 - 두 실행 파일에 Python 3.13.15와 `python313.dll` 포함 확인
@@ -22,13 +22,23 @@
 
 ## Linux와 공통 동작
 
-0.2.5의 [Linux·Windows 소스 검사](https://github.com/spac0301/pawline/actions/runs/36493805433)가 통과했습니다. 아래 로컬 GTK·전송 검사는 기능 코드가 같은 0.2.4에서 확인한 범위입니다.
+0.2.6의 [Linux·Windows 소스 검사](https://github.com/spac0301/pawline/actions/runs/36497893059)가 통과했습니다. GTK 격리 화면과 Qt offscreen 화면 검사도 새 소스에서 통과했습니다.
 
-- 최신 로컬 공통 검사 97개: 96개 통과, Windows ACL 검사 1개 제외
+- 로컬 공통 검사 103개: 102개 통과, Windows ACL 검사 1개 제외. 이후 추가한 2개를 포함한 heartbeat 계약 검사 8개도 통과
 - GTK 격리 화면과 Qt offscreen 화면의 열 정렬, 제목 여백·펼치기, 메뉴 위치, 종료된 선택 해제 확인
 - 로컬 TLS 서버에서 WebSocket·HTTP/SSE 전달, 요청·응답 연결, 인증, 관측 실패 시 통신 유지 확인
 - 기록 상한, 큐 초과, 저장 실패·지연, 닫힌 연결 정리 확인
 - 브라우저·설정 조회용 호출이 원래 CLI에 전달되고 관측기를 추가 실행하지 않는지 확인
+
+## 저장과 생존 확인
+
+- 30초의 가상 시간 동안 내용 파일의 바이트·mtime·inode를 유지하고 heartbeat만 갱신하는지 확인
+- GTK·Qt 공통 reader가 바뀌지 않은 본문을 다시 해석하지 않는지 확인
+- 중첩 사용량 변경, 수집기 재시작, 다른 snapshot ID, 누락·잘못된 heartbeat, 본문·heartbeat 저장 실패와 복구 확인
+- 수집기 중단 후 GPT·Claude의 기존 연결 만료와 version 1 호환 확인
+- 실제 usage.observed_at과 캐시 사용량은 heartbeat로 바뀌지 않음
+
+외부 파일 소비자는 [규약](docs/snapshots.md)을 지원한 뒤 새 수집기를 사용해야 합니다.
 
 ## 배포 범위
 
