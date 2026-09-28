@@ -1,0 +1,457 @@
+{
+  "name": "Pawline",
+  "version": "0.2.4",
+  "packaging_revision": "public-source-20260929",
+  "files": [
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "05597a68611b056ae57752adf33804fbe1d78d72a71c0dad0b768cb7e265a22b",
+      "bytes": 1422
+    },
+    {
+      "path": ".github/workflows/windows-build.yml",
+      "sha256": "9af359a825e955bc6de8c8d1d30b90c43f65d13a6c8ca6f5d0ec6de8257df4ef",
+      "bytes": 1411
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "53362c833e130ce313a4d453fc8daff56f5108ab3097d1318cd2da303cffc8d5",
+      "bytes": 549
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "2d25da06773249350d3c4c5cb72759d079f310ba29c9542ea31e24c7c97a8467",
+      "bytes": 4824
+    },
+    {
+      "path": "INSTALL.md",
+      "sha256": "64a299076b085285694232979a05731e091fa82195e7f5e26a4ee6cf63e10589",
+      "bytes": 3377
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "72ae17a396b00a96f025dd8b9fb0bc51e261fd45b7978d719f016263c7d70d46",
+      "bytes": 1077
+    },
+    {
+      "path": "PET_ASSET_NOTICE.md",
+      "sha256": "e64fcc183596b61052487bafc8596cb1f6984cad6d1346210095c66e3ed5628b",
+      "bytes": 3083
+    },
+    {
+      "path": "README.md",
+      "sha256": "2c3e6ddcfbf21c3daddef2b32a05453ba4f4ae3f3a983fc95f148aaed2b02ada",
+      "bytes": 13141
+    },
+    {
+      "path": "SECURITY.md",
+      "sha256": "074731cb1777dc44a9b6b2d7c37bfd84ec7e70cd4ed97226f22d3cb595e1c119",
+      "bytes": 5415
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "62b81a42779eeff24730179ef07b3d5ef0ff7472e24483896988a4ae28df0a79",
+      "bytes": 2510
+    },
+    {
+      "path": "UPSTREAM-DETECTOR-LICENSE",
+      "sha256": "986cbfdf5a24a055435d895e39a0ce024db9e6036bdfd16d68b6e7b5cc30129b",
+      "bytes": 1070
+    },
+    {
+      "path": "VERIFICATION.md",
+      "sha256": "548fb51519342cdbf4bb67b5ed97b609a51cee392d8c793bfe2bfb7cd9fdfd41",
+      "bytes": 3481
+    },
+    {
+      "path": "WINDOWS.md",
+      "sha256": "c4289bb3b313bfc1c9f12f2ed074b9681dd0970e4dbdf2df9db2e6b610019ac5",
+      "bytes": 5257
+    },
+    {
+      "path": "assets/fonts/Pretendard-LICENSE.txt",
+      "sha256": "82e9c8a4b203261f10ddba1296422d64914ff3d4b7bd8a12896d03f0f088d70a",
+      "bytes": 4816
+    },
+    {
+      "path": "assets/fonts/PretendardVariable.ttf",
+      "sha256": "3090ccde0442bb347aa7685d9ba8b17436a60682df6e8f92a9a670de14056e22",
+      "bytes": 6739336
+    },
+    {
+      "path": "assets/fonts/UPSTREAM.json",
+      "sha256": "8d4c7544826d287f0073ac4951640ff8af8ee8ec952b5f652f2253290b38ee4b",
+      "bytes": 162
+    },
+    {
+      "path": "assets/providers/OPENAI-APPS-SDK-UI-LICENSE",
+      "sha256": "f26a46776c890b0d7b45d042cb8a78fdca9c4742a5c7fd97f0f53767411b1cc6",
+      "bytes": 1054
+    },
+    {
+      "path": "assets/providers/SOURCES.md",
+      "sha256": "5e88430f4d368dafdf9fa2d5b1afa174a205f8a95e0a89173ce882cf2d285e51",
+      "bytes": 608
+    },
+    {
+      "path": "assets/providers/claude-spark.svg",
+      "sha256": "6d53db4be375e899c937c26cf16684a80d6e869b1928d72b37748bef2560e219",
+      "bytes": 2580
+    },
+    {
+      "path": "assets/providers/openai.svg",
+      "sha256": "6b1ea0cb7a93e948ec18e550868357c7d7c88db74a9f766441b6598bb4ed3fad",
+      "bytes": 2539
+    },
+    {
+      "path": "fluff-monitor-activity.service",
+      "sha256": "5c58aa44217085f5ce64b23e4e676dfe6b972649c9c314708643fcc7df70de89",
+      "bytes": 364
+    },
+    {
+      "path": "fluff_monitor/__init__.py",
+      "sha256": "6f922637b0ff126b5ef0e365a6c68bec449d9a806e17da499be6d541a54f1762",
+      "bytes": 74
+    },
+    {
+      "path": "fluff_monitor/activity.py",
+      "sha256": "a38c6d7f7d475b095ec01461d0dbe811f2ccdeb41d9933e71d029fc372cc3abf",
+      "bytes": 19400
+    },
+    {
+      "path": "fluff_monitor/capture.py",
+      "sha256": "cfd2acdd6c46a95e37ea18ff741124ca09164be63d62a04a40590ae439db0291",
+      "bytes": 10660
+    },
+    {
+      "path": "fluff_monitor/catalog.py",
+      "sha256": "cf635dc8561c01b5392389a6804ca0d1ec03323e8a4ed586456f930100be53a6",
+      "bytes": 5018
+    },
+    {
+      "path": "fluff_monitor/http_stream.py",
+      "sha256": "2cd63c919b2cd722e52f585eea8e92d7d12d7f2cba573f016203a06dd7ba259b",
+      "bytes": 7388
+    },
+    {
+      "path": "fluff_monitor/layout.py",
+      "sha256": "b4dd98b23c6943f4f209033c53316f276c8e466b9743b61f099c208a437ffb11",
+      "bytes": 1279
+    },
+    {
+      "path": "fluff_monitor/live.py",
+      "sha256": "c9dae972353f8e4f2afd1ddda2d187abda9701fd0a136cc36050c9527759b9a2",
+      "bytes": 16942
+    },
+    {
+      "path": "fluff_monitor/menu.py",
+      "sha256": "d1cbc8439b0d0ebcd15429fc33c60704c62ddce93161cc38c2a06d39f0241c5d",
+      "bytes": 16220
+    },
+    {
+      "path": "fluff_monitor/pet.py",
+      "sha256": "29bbbbb6aad8bba3ee7376d922cc23685d53c0c2eb14a9608a421e242b5cf413",
+      "bytes": 46549
+    },
+    {
+      "path": "fluff_monitor/pet_state.py",
+      "sha256": "e06f7f24602d624a59aba4fd0ce87a1ae12bc0579845d2d07a9690426f819c41",
+      "bytes": 4988
+    },
+    {
+      "path": "fluff_monitor/platform_support.py",
+      "sha256": "08c4eea6f112c2577b7b5c35c94f7b3c39b65bc693d5575b992668602ccbcc49",
+      "bytes": 4392
+    },
+    {
+      "path": "fluff_monitor/presentation.py",
+      "sha256": "75f801e3dde03c93d3a4b0952b374ae505d9a93270dfdce41d35d2b7bd42d6e7",
+      "bytes": 2983
+    },
+    {
+      "path": "fluff_monitor/proxy.py",
+      "sha256": "fe037828203f24e82072c5bdd333aa2b613a5e91ca594d561861e3717715c3d2",
+      "bytes": 29575
+    },
+    {
+      "path": "fluff_monitor/qt_pet.py",
+      "sha256": "0a7e14984d7113e1e83f6281138f17d49093c1dba170cce931237d5293153bc5",
+      "bytes": 27109
+    },
+    {
+      "path": "fluff_monitor/records.py",
+      "sha256": "e1a8dc19c7aaff3570e234a6d9d1f4699529c138a4fce454cb89c21b42a76e1e",
+      "bytes": 6399
+    },
+    {
+      "path": "fluff_monitor/storage.py",
+      "sha256": "0f9915b069cf3ec781096876a9ecb79aaf5151eb1d4aa9de35dea1976bccfc6c",
+      "bytes": 2267
+    },
+    {
+      "path": "fluff_monitor/views.py",
+      "sha256": "190594c05a6860bf65b5b67abb1ce62a40acc101c7875b12c7c7e235d0c2e72f",
+      "bytes": 10193
+    },
+    {
+      "path": "launch-capture.sh",
+      "sha256": "4c8821567f0f7e877f1bba3574647fe59fe8443f470f6b62bb002d82ad81fcde",
+      "bytes": 177
+    },
+    {
+      "path": "launch-pet.cmd",
+      "sha256": "0096df871902b0394e67c1235cca63eb1274148dc46cf42c9ce22756f9fdddfd",
+      "bytes": 251
+    },
+    {
+      "path": "launch-pet.sh",
+      "sha256": "0767e17ae57323f7c80d10183f4e7c3242c4f1113cadd37cda3fa66ba9ac8afb",
+      "bytes": 368
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "dbc9dd6a67c3b3fffefc308cf3e57b21ddfdda3769d86f9490ba614e512f323c",
+      "bytes": 494
+    },
+    {
+      "path": "requirements-windows.lock",
+      "sha256": "b02af32394fb5b5ea1ef357137e916137a6312776e276786df48b53c46827400",
+      "bytes": 195
+    },
+    {
+      "path": "requirements.lock",
+      "sha256": "25974bf0c658f8b0b4f663523af1438ed938bea89361314a3a47e8b020227855",
+      "bytes": 184
+    },
+    {
+      "path": "run.py",
+      "sha256": "0671b8a2f258eaa17f749fa65ce546e6398abd0d7b65967a614e940a428f6919",
+      "bytes": 668
+    },
+    {
+      "path": "tests/test_activity_usage.py",
+      "sha256": "3b1d967972ddc164d4287c041ca03c839e90dd5bea51bbe171bbbb6bd76137f1",
+      "bytes": 11936
+    },
+    {
+      "path": "tests/test_claude_resume.py",
+      "sha256": "c28ed42301ca3d534431f96303460c0f825688695fb412844dc152c3febd8a9a",
+      "bytes": 4694
+    },
+    {
+      "path": "tests/test_cli_handoff.py",
+      "sha256": "5c1790a71a6b101aaae3c364c24a39da8de2308969286850669e4ff9e9dedd13",
+      "bytes": 3432
+    },
+    {
+      "path": "tests/test_desktop_capture.py",
+      "sha256": "de2066e605e2550ca809833ee22be2b66b1e9da2fa3f5f6c4b3dafe4b14e591e",
+      "bytes": 14938
+    },
+    {
+      "path": "tests/test_http_recovery.py",
+      "sha256": "5dd74684d743abb65e4d9b022363fb9bdb093df3b2d170e96e56e6aa27554d85",
+      "bytes": 10915
+    },
+    {
+      "path": "tests/test_observer_resilience.py",
+      "sha256": "2b2439b2bdfb8b61a77de98138742f38819a3ab70f78fa92b8a20d90dbbae405",
+      "bytes": 12794
+    },
+    {
+      "path": "tests/test_pet_behavior.py",
+      "sha256": "42516daa90b341cb84e3895731ef252f47b52edf46e3e30108da72ad2fa505ba",
+      "bytes": 5093
+    },
+    {
+      "path": "tests/test_platform_support.py",
+      "sha256": "3f0894de2dcba42fae3a26967151571e7ac58b66cc64c848afb9df47033e7f42",
+      "bytes": 2625
+    },
+    {
+      "path": "tests/test_security.py",
+      "sha256": "658659788a40fc289c7250f708f5e925ecc96a12a0e83b528279c9392cd84e2d",
+      "bytes": 3402
+    },
+    {
+      "path": "tests/test_shared_snapshots.py",
+      "sha256": "a6acb4927e9dcbaeb19adc1d1342281c56a634ba8dd624918ebb32978aed82e3",
+      "bytes": 2243
+    },
+    {
+      "path": "tests/test_transport.py",
+      "sha256": "d659aa96450da40d052366d17230d577e247844a6db1e5ba3d68d97b0a7cc572",
+      "bytes": 27235
+    },
+    {
+      "path": "tests/verify_activity_ui.py",
+      "sha256": "2734fd76ef592255d587642dd5826f2fbbd08198145a82fc21e1aca8c6f4cfa2",
+      "bytes": 20721
+    },
+    {
+      "path": "tests/verify_qt_ui.py",
+      "sha256": "dec28a28b177a7da16a1940ee1f568f63f4d4675dfd2dab82d593803c32e04c0",
+      "bytes": 7067
+    },
+    {
+      "path": "tests/verify_windows_bundle.py",
+      "sha256": "64012f3a276a0e9f615b807f8b54c13eef26a8631dd2a6e6abe0d1ceb792d484",
+      "bytes": 3182
+    },
+    {
+      "path": "vendor/claude-pet/LICENSE",
+      "sha256": "ff626e5ca1a52bc25b8c3eee70ca59e1132ae4397c98c4345e8f7317a38a9538",
+      "bytes": 1066
+    },
+    {
+      "path": "vendor/claude-pet/LOCAL_CHANGES.md",
+      "sha256": "e462bad4d96204e57be2cf91475047904d05586a1912cfbb1b537ba85caa8e68",
+      "bytes": 590
+    },
+    {
+      "path": "vendor/claude-pet/UPSTREAM.json",
+      "sha256": "3a86f2214071971c2df131883d4af9c83e2e7702dbffd1fa5effc9d73c2ee5af",
+      "bytes": 137
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/__init__.py",
+      "sha256": "ea2373a394e89443ef38986a00aa0fab14a7dc087355a3dbb246efbe0c3b2d74",
+      "bytes": 99
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/__main__.py",
+      "sha256": "e0930aeba5a3e2e2d94ca6c5fac4f72c0c4eb2be9bba283becf98e909091471c",
+      "bytes": 83
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/agents.py",
+      "sha256": "cfde3a606dd9f920601cca9d6ea3c8ceb9f2dfa2074149e6bb1cc4af401769dd",
+      "bytes": 12684
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/cli.py",
+      "sha256": "c907090a12524a22ca0af61b356d9cd420b7d8da0a0d49609e33f30980af0541",
+      "bytes": 65966
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/config.py",
+      "sha256": "7b6982c85e06b5d776c2c8d503ca4d173e684e4647f08112c34fc3d964ffd258",
+      "bytes": 6602
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/desktop.py",
+      "sha256": "98483de618474f88aaaa15391e9143126512954d7527d26e4c6e11732a698944",
+      "bytes": 14621
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/errors.py",
+      "sha256": "1fcc9cd197dbd8544a52d1471e8d09fe6fb7e7e4fa132aa34550e3b695a26fd0",
+      "bytes": 254
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/hatch.py",
+      "sha256": "2d0b44f41046025d92c35d9b3aea8ae2e8ece027bdcee8d10a376b0fe1de6cc4",
+      "bytes": 8518
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/hook.py",
+      "sha256": "1a9dc06ce8f8346b7b444c57d99ea00bfd03b0f7f82e44135c0240c14e5d36b7",
+      "bytes": 9068
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/jump.py",
+      "sha256": "cfc1c4bb64e1e7ed7079baafe1d8dd881fedc43e4b9c4a5ced29a197a2cf44d8",
+      "bytes": 17442
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/launch.py",
+      "sha256": "d9def24df5b04a9e4a2a4a4c956a3f042f3259314713e2147550539336f444ee",
+      "bytes": 3154
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/locate.py",
+      "sha256": "9269f13ac62a6327b619773314b201170e7029fc4a76fbcd30678ab741b9b332",
+      "bytes": 4872
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/motion.py",
+      "sha256": "0923a572f74b3ec6e9ebc455eeaa80de28565c5791e0112ac126281f8e9efc75",
+      "bytes": 8716
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/overlay.py",
+      "sha256": "9b6c3da1a04099136d4bbc79c7cc4b08bbee8127de187301e83f00a438b9319f",
+      "bytes": 130599
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/petting.py",
+      "sha256": "caff40d5b92a079749f83908210402c195352f2285aac0087db45d3a470a4dba",
+      "bytes": 18617
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/pointer.py",
+      "sha256": "e3896bfba71b0eab1f5cc9d4058bc9935ed3fc4c0002a278f6c70f7263add9fa",
+      "bytes": 15447
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/registry.py",
+      "sha256": "9a1eceab9e0f80c0d5044a9ee13ffb9e7ced4ad1c0dff1c33fd0ce2af056bc6d",
+      "bytes": 7690
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/shellext.py",
+      "sha256": "32338f8e434b571c9a9a21bd9fd85a4b06229be2b291935cfb64c48bbfab2e9c",
+      "bytes": 8243
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/sprites.py",
+      "sha256": "6fc3b2e0b679856113ca791627fe4f29e8eb3031fe8b99e4f632df2dcb74a4ee",
+      "bytes": 7442
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/state.py",
+      "sha256": "8c362a03dbb9d5b2dd8421195a2ea807a599c355a4e0bf8f00b490da2e9ace78",
+      "bytes": 19733
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/terminal.py",
+      "sha256": "da5096c23f6803e5ebaab736bf37fb0e80e8a94425c0a75b7f4cd80c1f641f1a",
+      "bytes": 8195
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/tray.py",
+      "sha256": "1993a34fed0371d50067b5c0b8e95c2d20cb37fcc0442ebcba5bf5b1d5b34b2d",
+      "bytes": 4368
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/update.py",
+      "sha256": "6527b187066c9cbd13996c7097b073178117374b02c1eb6d3f7eb7da2b14da7f",
+      "bytes": 16936
+    },
+    {
+      "path": "vendor/claude-pet/claude_pet/usage.py",
+      "sha256": "75dff01746243f78edb18263f008bd5b0cd5440d1283e8c1e8f77a1688b415d5",
+      "bytes": 5863
+    },
+    {
+      "path": "windows/build.ps1",
+      "sha256": "d1bb89c7fbe5a6e6b851375dcb8c265144b677fb8fcdd62cc2d75a444547166f",
+      "bytes": 1958
+    },
+    {
+      "path": "windows/capture_entry.py",
+      "sha256": "246a516ad652d082835d67fde2f7e5bd6ba6e0dd441d7191e16402a74365c908",
+      "bytes": 178
+    },
+    {
+      "path": "windows/pet_entry.py",
+      "sha256": "077603267f7e916778811e3479e4d2f3043cd9ccf3984eef6fdfd0d88e3cde8a",
+      "bytes": 174
+    },
+    {
+      "path": "windows/verify.cmd",
+      "sha256": "460a9e117075918fb6ca700da9ce3dfa7e7bb7cb9e80265c9839234f0d0754f3",
+      "bytes": 505
+    }
+  ]
+}

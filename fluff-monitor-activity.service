@@ -1,0 +1,15 @@
+[Unit]
+Description=Fluff shared local activity and input-cache telemetry
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/fluff-monitor/.venv/bin/python -B %h/.local/share/fluff-monitor/run.py activity
+Environment=PYTHONNOUSERSITE=1
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+RestrictAddressFamilies=AF_UNIX
+
+[Install]
+WantedBy=default.target

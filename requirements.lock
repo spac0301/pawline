@@ -1,0 +1,7 @@
+# Linux CPython 3.10. GTK, PyGObject and cairo use the existing OS packages.
+cryptography==50.0.1
+Pillow==12.3.0
+zstandard==0.25.0
+cffi==2.1.1
+pycparser==3.0
+typing_extensions==4.16.0

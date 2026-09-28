@@ -1,0 +1,42 @@
+# Local Python runtimes and build results
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+*.spec
+verification/
+*.log
+*.zip
+
+# Native account data and generated observer state never belong in this repo
+.codex/
+.claude/
+.petdex/
+.env
+.env.*
+activity.json
+desktop.json
+role-sources.json
+capture-config.json
+panel.json
+pet-alerts.json
+auth.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Pet artwork is installed separately from its original distributor
+pets/
+pet.json
+spritesheet.*
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
