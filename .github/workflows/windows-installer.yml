@@ -1,0 +1,47 @@
+name: Windows installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Experimental Windows build run ID
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  package:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Download verified executable bundle
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.run_id }}
+        run: |
+          $run = gh run view $env:SOURCE_RUN --json conclusion,headSha,workflowName | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $run.conclusion -ne 'success' -or $run.workflowName -ne 'Experimental Windows build') { throw 'A successful executable build is required.' }
+          gh run download $env:SOURCE_RUN --name pawline-windows-x64-experimental --dir dist
+          if ($LASTEXITCODE -ne 0) { throw 'Bundle download failed.' }
+          $run | ConvertTo-Json | Set-Content source-build.json
+      - name: Build installer
+        shell: pwsh
+        run: windows/build-installer.ps1
+      - name: Verify installation and uninstall
+        shell: pwsh
+        run: windows/verify-installer.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pawline-windows-installer
+          path: |
+            installer/*.exe
+            source-build.json
+          if-no-files-found: error
+          retention-days: 14
