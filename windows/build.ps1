@@ -5,11 +5,14 @@ $python = Join-Path $project '.venv\Scripts\python.exe'
 if (-not (Test-Path $python)) { throw 'Create the private runtime using WINDOWS.md first.' }
 Push-Location $project
 try {
+    $requiredPython = (Get-Content (Join-Path $PSScriptRoot 'python-version.txt') -Raw).Trim()
+    & $python -c "import sys; assert sys.version.split()[0] == sys.argv[1], 'Use the pinned Windows Python version: ' + sys.argv[1]" $requiredPython
+    if ($LASTEXITCODE -ne 0) { throw 'Unsupported Python build runtime.' }
     & $python -m pip install 'pyinstaller==6.22.3'
     if ($LASTEXITCODE -ne 0) { throw 'PyInstaller installation failed.' }
     & $python -c "import importlib.metadata as m; assert not any(d.metadata['Name'].lower().replace('_', '-') == 'pyside6-addons' for d in m.distributions()), 'Use a clean runtime with requirements-windows.lock; unused Qt Addons must not enter the bundle.'"
     if ($LASTEXITCODE -ne 0) { throw 'Unexpected Qt Addons in the build runtime.' }
-    & $python -m PyInstaller --onedir --noupx --windowed --name pawline --paths . --paths vendor/claude-pet --add-data 'assets:assets' --add-data 'vendor/claude-pet:vendor/claude-pet' windows/pet_entry.py
+    & $python -m PyInstaller --onedir --noupx --windowed --name pawline --paths . --paths vendor/claude-pet --add-data 'assets/fonts:assets/fonts' --add-data 'assets/providers:assets/providers' --add-data 'assets/licenses:assets/licenses' --add-data 'vendor/claude-pet:vendor/claude-pet' windows/pet_entry.py
     if ($LASTEXITCODE -ne 0) { throw 'Pet build failed.' }
     & $python -m PyInstaller --onedir --noupx --console --name pawline-capture --paths . windows/capture_entry.py
     if ($LASTEXITCODE -ne 0) { throw 'Capture build failed.' }

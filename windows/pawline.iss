@@ -1,4 +1,4 @@
-#define AppVersion "0.2.4"
+#define AppVersion "0.2.5"
 [Setup]
 AppId=Pawline
 AppName=Pawline
