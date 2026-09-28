@@ -1,3 +1,12 @@
+# 0.2.6 — avoid unchanged snapshot rewrites
+
+Activity and routing snapshots are written only when their contents change.
+A small, generation-matched heartbeat keeps unchanged data connected; stale or
+mismatched heartbeats cannot refresh another snapshot. GTK, Qt and native
+collectors share the same reader and publisher rules. Version 1 remains readable.
+External readers must support the [snapshot protocol](docs/snapshots.md) before
+using a version 2 collector.
+
 # 0.2.5 — Windows runtime update
 
 Windows builds now pin Python 3.13.15 instead of selecting the older 3.12.10
