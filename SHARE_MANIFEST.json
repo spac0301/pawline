@@ -1,17 +1,17 @@
 {
   "name": "Pawline",
-  "version": "0.2.4",
-  "packaging_revision": "public-source-20260929-release",
+  "version": "0.2.5",
+  "packaging_revision": "public-source-20260929-runtime-update",
   "files": [
     {
       "path": ".github/workflows/check.yml",
-      "sha256": "0a09d70e2f9e4c73dfa1139fc14c38fdc04e12edf155e38483f58adcbdb7d7b6",
-      "bytes": 1628
+      "sha256": "f117bb1cb5ab9f1a7a2842bcc0142983c33f76c826020434b3ced153275a873f",
+      "bytes": 1653
     },
     {
       "path": ".github/workflows/windows-build.yml",
-      "sha256": "9af359a825e955bc6de8c8d1d30b90c43f65d13a6c8ca6f5d0ec6de8257df4ef",
-      "bytes": 1411
+      "sha256": "513c30213a2b8be67afcea5cbdb2e050a02a726228ff46e05a8d30d38e859b32",
+      "bytes": 1436
     },
     {
       "path": ".github/workflows/windows-installer.yml",
@@ -25,12 +25,12 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "902918f4f90aa1835fab39b6a423ebe8615afc7d3bb034e84e293b69b29aafc1",
-      "bytes": 5308
+      "sha256": "dffd552f88418480a14b99b8e4306b9a21ecbe88f5e472748172df05c255fd5d",
+      "bytes": 5642
     },
     {
       "path": "INSTALL.md",
-      "sha256": "798a374cdccd32f867105827b6da06ddc7b2e3d85c2a28627b5bebe5a8251094",
+      "sha256": "d2aea510ca7ef477acbdc2534f2ceac3554a7db25c1beeac4aa16cc3ba0a639e",
       "bytes": 2310
     },
     {
@@ -45,13 +45,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "3bd3f1058bf50b9ed5ed79e6fd44c6d8eeb4cf8c7c98031bfb75108a531e9982",
+      "sha256": "1dc797696446eb45714558a04b01543bd56e2627c93dd78f56d53c6d2bfee055",
       "bytes": 2230
     },
     {
       "path": "SECURITY.md",
-      "sha256": "074731cb1777dc44a9b6b2d7c37bfd84ec7e70cd4ed97226f22d3cb595e1c119",
-      "bytes": 5415
+      "sha256": "37a56c7ccc79ccba57866bee642c0e1cc375b3fdaf06276dda92a321950dea67",
+      "bytes": 6556
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -65,13 +65,13 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "007fbf15585f102f95c1632c4c87e782d7fa2642b8054872ea56839c2c9d26ee",
-      "bytes": 2550
+      "sha256": "f228013ad1ddae6b86d0bf57b836a38382c4f6811262ee6b919bbd6964364f21",
+      "bytes": 2849
     },
     {
       "path": "WINDOWS.md",
-      "sha256": "982b6e98433b02b95d442782f9d8c7eca46b943b39f87b3f3512fd13a3e26536",
-      "bytes": 4329
+      "sha256": "4be191a5d2be84bca5d77ff9fc00f1fe83be5012acc76dae1e3234e36bace854",
+      "bytes": 4408
     },
     {
       "path": "assets/fonts/Pretendard-LICENSE.txt",
@@ -145,7 +145,7 @@
     },
     {
       "path": "fluff_monitor/__init__.py",
-      "sha256": "6f922637b0ff126b5ef0e365a6c68bec449d9a806e17da499be6d541a54f1762",
+      "sha256": "5c978580c2bafae16522034bb73013138af41d2fc5740e9292bffb9471883278",
       "bytes": 74
     },
     {
@@ -245,7 +245,7 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "0a90db6b33526c908b387429ca3ff3a19c6f6f63f49fe84f1b81c540ac78c8b8",
+      "sha256": "28e4a9ac7bc1ba84e40c3609152790c52f86287097dd19ff8d48bd613d870282",
       "bytes": 505
     },
     {
@@ -330,8 +330,8 @@
     },
     {
       "path": "tests/verify_windows_bundle.py",
-      "sha256": "d34f8f1fd1870b2315cf850ed0ade8674664ce2fba9a60e53c2c5a57fcae0bc0",
-      "bytes": 4439
+      "sha256": "1babec7a3461e6e6a7e4f634da948c2d8b27130784edfe11fbf84a79b1d555ae",
+      "bytes": 5053
     },
     {
       "path": "vendor/claude-pet/LICENSE",
@@ -475,8 +475,8 @@
     },
     {
       "path": "windows/build.ps1",
-      "sha256": "8e2e3c5c3e4bfc29eba18c2471210c2117c1095b80ab9ddd936eb5001b1e2c5f",
-      "bytes": 2420
+      "sha256": "3aa368fcbcb3ae09a355ea4d8f143276c59c6703266fe7fe4b7402e4e1c8c4cb",
+      "bytes": 2843
     },
     {
       "path": "windows/bundle_licenses.py",
@@ -495,7 +495,7 @@
     },
     {
       "path": "windows/pawline.iss",
-      "sha256": "0c85cc3a32d40256b0441111c9ce42bdaec2523ef7526d7b7235a1f31e8d9dda",
+      "sha256": "315782bfef1a4a9da4d6628426b63eef165032ce82b0af0e50f5af12499787d4",
       "bytes": 1112
     },
     {
@@ -504,8 +504,13 @@
       "bytes": 174
     },
     {
+      "path": "windows/python-version.txt",
+      "sha256": "861b3dd8083d28f336ef70f6755bc399538ddad627b1d095820ca34cb953cf14",
+      "bytes": 8
+    },
+    {
       "path": "windows/verify-installer.ps1",
-      "sha256": "f875433fd9a2665ce105fcd563a08efe50c5dee5470f079b99d1b24431733761",
+      "sha256": "654b044a6a5912a80638cf4a17752a4d42d23fcce5e4c42f8c613436d28cae78",
       "bytes": 1632
     },
     {

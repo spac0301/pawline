@@ -1,14 +1,15 @@
-# 검증 범위 · 0.2.4
+# 검증 범위 · 0.2.5
 
 ## Windows 배포본
 
-[빌드·실행 검사 기록](https://github.com/spac0301/pawline/actions/runs/36489636819)
+[빌드·실행 검사 기록](https://github.com/spac0301/pawline/actions/runs/36493844120)
 
-- 소스: `db8e4494f9ae5ecba3897263ea0fe253a852bff6`
-- Windows Server 2022 · Python 3.12 · x64에서 EXE 빌드 성공
+- 소스: `f6c608b03b2184d1243a095d2a0f9a9dd5b71d9a`
+- Windows Server 2022 · Python 3.13.15 · x64에서 EXE 빌드 성공
 - 공통 검사 97개: 90개 통과, 다른 플랫폼 전용 7개 제외
 - GTK·Qt의 `claude-opus-5.5` 표시와 잘린 활동 상태의 펼치기·닫기·열 위치 유지 확인
 - Windows Qt 화면과 패키징된 EXE의 시작·종료 확인
+- 두 실행 파일에 Python 3.13.15와 `python313.dll` 포함 확인
 - 보조 CLI의 표준 입력·출력·오류 출력·종료 코드 전달 확인
 - 런타임 라이선스 포함, 사용하지 않는 Qt PDF·Virtual Keyboard 미포함 확인
 
@@ -20,6 +21,8 @@
 자식 프로세스의 입출력과 종료 코드를 기다려 전달하도록 수정했습니다.
 
 ## Linux와 공통 동작
+
+0.2.5의 [Linux·Windows 소스 검사](https://github.com/spac0301/pawline/actions/runs/36493805433)가 통과했습니다. 아래 로컬 GTK·전송 검사는 기능 코드가 같은 0.2.4에서 확인한 범위입니다.
 
 - 최신 로컬 공통 검사 97개: 96개 통과, Windows ACL 검사 1개 제외
 - GTK 격리 화면과 Qt offscreen 화면의 열 정렬, 제목 여백·펼치기, 메뉴 위치, 종료된 선택 해제 확인

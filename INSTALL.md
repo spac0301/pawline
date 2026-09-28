@@ -1,6 +1,6 @@
 # Linux에서 시작하기
 
-[Linux ZIP 다운로드](https://github.com/spac0301/pawline/releases/download/v0.2.4/pawline-0.2.4-source.zip)
+[Linux ZIP 다운로드](https://github.com/spac0301/pawline/releases/download/v0.2.5/pawline-0.2.5-source.zip)
 
 Linux 버전은 Python과 GTK3로 실행합니다. Python 3.10 이상, venv, PyGObject, GTK3, cairo가 필요합니다.
 아래 안내는 GTK3/X11 또는 XWayland 환경을 기준으로 합니다.
