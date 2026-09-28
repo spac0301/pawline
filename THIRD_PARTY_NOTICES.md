@@ -46,3 +46,9 @@ Windows build. Their presence is checked before publishing the bundle.
 Python's license and dependency wheel notices are copied from the build runtime.
 The source ZIP lists dependencies rather than redistributing their installed
 binary packages.
+
+## Windows installer
+
+The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php),
+Copyright (C) Jordan Russell and Martijn Laan. Its original copyright and
+website notices are retained. [Inno Setup license](https://jrsoftware.org/files/is/license.txt).

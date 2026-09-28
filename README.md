@@ -10,7 +10,7 @@ Codex와 Claude Code의 작업·모델·캐시 사용량을 보여주는 데스�
 
 ## 사용
 
-**Windows** — ZIP을 풀고 `pawline/pawline.exe`를 실행합니다. Python 설치는 필요하지 않습니다. [설치 안내](WINDOWS.md)
+**Windows** — 설치 EXE 또는 포터블 ZIP을 받습니다. Python 설치는 필요하지 않습니다. [설치 안내](WINDOWS.md)
 
 **Linux** — Python·GTK 환경에서 실행합니다. [설치 안내](INSTALL.md)
 

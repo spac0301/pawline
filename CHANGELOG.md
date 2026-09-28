@@ -15,6 +15,11 @@ Windows packaging also fixes native CLI stdio/exit forwarding and inherited
 DLL search paths. Portable bundles use Qt Essentials, retain runtime licenses,
 and are checked for startup, native handoff, and unused Qt Addons.
 
+GTK and Qt now display Claude version numbers with decimal separators while
+retaining raw model IDs. Clipped status labels use the same inline hover
+expansion as titles on both providers. A per-user Windows installer is provided
+alongside the portable bundle.
+
 # 0.2.3 — separate information-window and pet menus
 
 Public source packaging adds the project MIT license, third-party notices,

@@ -1,12 +1,18 @@
 # Windows에서 시작하기
 
-[Windows x64 포터블 ZIP 받기](https://github.com/spac0301/pawline/releases/tag/v0.2.4)
+[Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.4)
 
-## EXE로 실행
+## 설치 파일로 실행
 
-1. ZIP을 사용자 폴더에 압축 해제합니다. 설치 프로그램은 없으며 Python을 따로 설치할 필요도 없습니다.
-2. [Fluff 원본](https://petdex.dev/pets/fluff)에서 펫을 받습니다. `pet.json`과 `spritesheet.webp`가 들어 있는 폴더를 `%USERPROFILE%\.codex\pets\fluff`로 둡니다.
-3. `pawline` 폴더 안의 `pawline.exe`를 실행합니다. `_internal` 폴더를 분리하지 마세요.
+`Pawline-Setup-0.2.4-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
+관리자 권한이나 Python 설치는 필요하지 않습니다. Windows의 설치된 앱 목록에서 제거할 수 있습니다.
+
+[Fluff 원본](https://petdex.dev/pets/fluff)에서 펫을 받아 `pet.json`과 `spritesheet.webp`를 `%USERPROFILE%\.codex\pets\fluff`에 둔 뒤 Pawline을 실행합니다.
+설치 프로그램은 Codex 설정·계정·실행 중인 작업을 변경하지 않습니다.
+
+## 설치 없이 사용
+
+포터블 ZIP을 풀고 `pawline/pawline.exe`를 실행합니다. EXE 옆의 `_internal` 폴더를 함께 두어야 합니다.
 
 다른 펫 폴더를 쓰려면 압축을 푼 폴더에서 PowerShell로 실행합니다.
 
