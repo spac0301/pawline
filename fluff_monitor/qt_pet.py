@@ -578,7 +578,7 @@ class CollectorWorker:
             if not lock_exclusive(lock):return
             collector = ActivityCollector(self.directory)
             while not self.done.is_set():
-                atomic_json(self.directory/"activity.json", collector.snapshot())
+                collector.publish()
                 if self.done.wait(2):break
 
 

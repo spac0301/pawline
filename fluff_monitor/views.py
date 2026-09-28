@@ -2,12 +2,12 @@
 from __future__ import annotations
 import time
 from pathlib import Path
-from .storage import read_json, state_dir
+from .storage import read_snapshot, state_dir
 
 def desktop_view(directory=None, now=None, *, thread_id=None, catalog=None, activity=None, include_history=False, capture=None):
     """Only actual desktop observations; never substitute a standalone probe."""
     now = now or time.time()
-    value = capture if capture is not None else read_json(Path(directory or state_dir()) / "desktop.json")
+    value = capture if capture is not None else read_snapshot(Path(directory or state_dir()) / "desktop.json")
     has_capture = bool(value)
     sessions = value.get("sessions") or []
     observations = list(sessions)
@@ -25,7 +25,7 @@ def desktop_view(directory=None, now=None, *, thread_id=None, catalog=None, acti
         # A saved subagent is not a separate user task. Never classify by title.
         sessions = [s for s in sessions if catalog.metadata.get(s["thread_id"], {}).get("kind", "task") == "task"]
     recent, history = list(sessions), []
-    metrics = activity if activity is not None else read_json(Path(directory or state_dir()) / "activity.json")
+    metrics = activity if activity is not None else read_snapshot(Path(directory or state_dir()) / "activity.json")
     metrics_fresh = bool(metrics) and now - metrics.get("updated_at", 0) <= 10 and metrics.get("catalog_available", True)
     if metrics_fresh:
         states = metrics.get("threads") or {}

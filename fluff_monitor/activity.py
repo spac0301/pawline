@@ -20,7 +20,7 @@ import sys
 
 from .catalog import ThreadCatalog
 from . import __version__
-from .storage import atomic_json, read_json, state_dir
+from .storage import Publisher, SnapshotReader, read_json, state_dir
 from .platform_support import (lock_exclusive, windows_claude_processes,
                                cli_argument, is_claude_cli, native_claude_session)
 
@@ -312,6 +312,11 @@ class ActivityCollector:
         self.readers = {}
         self.candidates_at, self.candidates = 0, []
         self.claude = ClaudeCollector()
+        self.snapshots = SnapshotReader()
+        self.publisher = Publisher(self.directory)
+
+    def publish(self):
+        self.publisher.publish('activity', self.snapshot(), heartbeat=True)
 
     def claude_roles(self):
         """Explicit role-to-registry bindings survive session rotations, not prompts."""
@@ -335,7 +340,7 @@ class ActivityCollector:
 
     def snapshot(self, now=None):
         now = time.time() if now is None else now
-        capture = read_json(self.directory / "desktop.json")
+        capture = self.snapshots.read(self.directory / "desktop.json")
         captured = {s["thread_id"]: s for s in capture.get("sessions", []) if s.get("thread_id")}
         if now - self.candidates_at >= 5:
             try:
@@ -390,7 +395,7 @@ def main(argv=None):
         for sig in (signal.SIGTERM, signal.SIGINT):
             signal.signal(sig, lambda *_: done.set())
         while not done.is_set():
-            atomic_json(directory / "activity.json", collector.snapshot())
+            collector.publish()
             if args.once or done.wait(2):
                 break
     return 0
