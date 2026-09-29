@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import math
 import os
+import math
 from pathlib import Path
 import sys
 import threading
@@ -15,7 +16,7 @@ import time
 from types import SimpleNamespace
 
 from PySide6.QtCore import Qt, QTimer, Signal, QPoint, QRect, QPropertyAnimation
-from PySide6.QtGui import QFont, QFontDatabase, QImage, QPainter, QPixmap, QColor, QIcon
+from PySide6.QtGui import QFont, QFontDatabase, QFontMetricsF, QImage, QPainter, QPixmap, QColor, QIcon, QLinearGradient
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QWidget, QFrame, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy
 
@@ -24,6 +25,9 @@ from .catalog import SnapshotCatalog
 from .layout import beside_position
 from .platform_support import lock_exclusive
 from .presentation import usage_text, route_status, menu_actions, model_text, gpt_request
+from .presentation import CARD_WIDTH, CARD_PADDING, ROW_HEIGHT, CONTROL_HEIGHT, PROVIDER_HEIGHT
+from .presentation import CONTENT_INSET, FIELD_WIDTH, FIELD_GAP, STATUS_WIDTH
+from .presentation import progress_status, observation_status, selection_text, usage_parts, cache_breakdown, FONT_SIZES, THEMES, toolbar_icon
 from .pet_state import MismatchAlerts
 from .storage import SnapshotReader, atomic_json, read_json, state_dir
 from .views import desktop_view, claude_view
@@ -33,11 +37,8 @@ ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(ROOT / "vendor/claude-pet"))
 from claude_pet.sprites import load_pet
 
-CARD_WIDTH, PET_HEIGHT, GAP, INSET = 288, 120, 12, 8
-THEMES = {
-    "dark": dict(background="#232427", edge="#3a3b3f", foreground="#eeeeef", muted="#a9aab1", task="#c6c7ce", hover="#36373c", claude="#e8ab95"),
-    "light": dict(background="#fafafa", edge="#d8d9de", foreground="#24252a", muted="#686b75", task="#50535c", hover="#eeeeef", claude="#98492e"),
-}
+PET_HEIGHT, GAP, INSET = 120, 12, CONTENT_INSET
+
 
 
 def layout(widget, kind, margins=(0, 0, 0, 0), spacing=0):
@@ -45,6 +46,21 @@ def layout(widget, kind, margins=(0, 0, 0, 0), spacing=0):
     result.setContentsMargins(*margins)
     result.setSpacing(spacing)
     return result
+
+
+def apply_font_axes(root):
+    """Select Pretendard's real weight, not just its nominal QFont weight.
+
+    https://doc.qt.io/qt-6/qfont.html#setVariableAxis
+    The bundled variable font otherwise renders its Regular outline on the
+    tested Qt backend even when QFontInfo reports the requested weight.
+    """
+    tag = QFont.Tag.fromString("wght")
+    for widget in root.findChildren(QLabel):
+        widget.ensurePolished()
+        font = widget.font()
+        font.setVariableAxis(tag, float(font.weight()))
+        widget.setFont(font)
 
 
 class Text(QLabel):
@@ -60,8 +76,9 @@ class Text(QLabel):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        painter.setFont(self.font())
         painter.setPen(self.palette().color(self.foregroundRole()))
-        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+        painter.drawText(self.rect(), self.alignment(),
                          self.fontMetrics().elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width()))
 
     def enterEvent(self, event):
@@ -93,6 +110,18 @@ class Mark(QWidget):
         QSvgRenderer(svg.encode()).render(painter)
 
 
+class ControlMark(QWidget):
+    def __init__(self, name, parent=None, size=18):
+        super().__init__(parent)
+        self.name, self.active, self.ink = name, False, THEMES["dark"]["muted"]
+        self.setFixedSize(size, size)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        QSvgRenderer(toolbar_icon(self.name, self.ink, self.active)).render(painter)
+
+
 class StatusDot(QWidget):
     def __init__(self):
         super().__init__()
@@ -117,8 +146,7 @@ class TitleButton(QPushButton):
         self.setMinimumWidth(0)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         self.caption = Text()
-        self.arrow = Text("⌄")
-        self.arrow.setFixedWidth(10)
+        self.arrow = ControlMark("chevron-down", size=12)
         box = layout(self, QHBoxLayout, (INSET, 0, INSET, 0), 4)
         box.addWidget(self.caption, 1)
         box.addWidget(self.arrow)
@@ -190,6 +218,7 @@ class ChoicePopup(Surface):
 
     def open_at(self, anchor, beside=False):
         self.owner.title_popup.hide()
+        apply_font_axes(self)
         self.adjustSize()
         area = self.owner.screen_area()
         pet = self.owner.pet_rect()
@@ -257,31 +286,41 @@ class TitlePopup(Surface):
                 f'font-size: {source.font().pixelSize()}px; color: {source.palette().color(source.foregroundRole()).name()};')
         target = text_width + (34 if is_title else 2*INSET)
         area = self.owner.screen_area()
-        target = min(420, target, area.x+area.width-pos.x())
+        target = min(420, target, area.width)
+        pos.setX(max(area.x, min(pos.x(), area.x+area.width-target)))
         px, py, pw, ph = self.owner.pet_rect()
-        if pos.y() < py+ph and pos.y()+24 > py and pos.x() < px:
-            target = min(target, px-GAP-pos.x())
+        height = anchor.height() if is_title else 24
+        if pos.y() < py+ph and pos.y()+height > py and pos.x() < px+pw and pos.x()+target > px:
+            if px-GAP-target >= area.x:
+                pos.setX(px-GAP-target)
+            elif px+pw+GAP+target <= area.x+area.width:
+                pos.setX(px+pw+GAP)
+            else:
+                self.hide()
+                return
         if target <= initial:
             self.hide()
             return
-        start = QRect(pos.x(), pos.y(), initial, 24)
+        height = anchor.height() if is_title else 24
+        self.button.setFixedHeight(height)
+        start = QRect(pos.x(), pos.y(), initial, height)
         self.setGeometry(start)
         self.show()
         self.animation.stop()
         self.animation.setStartValue(start)
-        self.animation.setEndValue(QRect(pos.x(), pos.y(), target, 24))
+        self.animation.setEndValue(QRect(pos.x(), pos.y(), target, height))
         self.animation.start()
 
 
 class ProviderSection(QWidget):
     def __init__(self, provider, owner):
-        super().__init__(owner)
+        super().__init__()
         self.provider, self.owner = provider, owner
-        box = layout(self, QVBoxLayout, spacing=3)
-        self.setFixedHeight(82)
+        box = layout(self, QVBoxLayout, spacing=4)
+        self.setFixedHeight(PROVIDER_HEIGHT)
         header = QWidget()
-        header.setFixedHeight(24)
-        row = layout(header, QHBoxLayout, spacing=6)
+        header.setFixedHeight(ROW_HEIGHT)
+        header_row = layout(header, QHBoxLayout, (INSET, 0, INSET, 0), 6)
         brand = QWidget()
         brand.setFixedWidth(68)
         brand_row = layout(brand, QHBoxLayout, spacing=6)
@@ -290,83 +329,252 @@ class ProviderSection(QWidget):
         self.brand.setObjectName(provider+"Brand")
         brand_row.addWidget(self.mark)
         brand_row.addWidget(self.brand, 1)
-        row.addWidget(brand)
+        self.mode = Text("자동 추적")
+        self.mode.setObjectName("muted")
+        self.mode.setFixedWidth(64)
+        self.progress = Text("작업 없음")
+        self.progress.setObjectName("muted")
+        self.progress.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        header_row.addWidget(brand)
+        header_row.addWidget(self.mode)
+        header_row.addWidget(self.progress, 1)
+        box.addWidget(header)
         self.title = TitleButton()
+        self.title.setFixedHeight(CONTROL_HEIGHT)
         self.title.clicked.connect(lambda: owner.choose_provider(provider))
         self.title.hovered.connect(lambda entered: owner.hover_title(self.title, entered))
-        row.addWidget(self.title, 1)
-        if provider == "gpt":
-            more = QPushButton("⋯")
-            more.clicked.connect(lambda: owner.actions("panel"))
-            self.options_button = more
-        else:
-            more = QWidget()
-        more.setFixedSize(24, 24)
-        row.addWidget(more)
-        box.addWidget(header)
-        self.requested = self.add_row(box, "요청" if provider == "gpt" else "설정", 17)
-        self.served = self.add_row(box, "응답", 17)
-        self.status, self.cache = Text("대기"), Text("")
-        self.status.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
-        self.status.hovered.connect(lambda entered: owner.hover_title(self.status, entered))
+        box.addWidget(self.title)
+        self.served = self.add_row(box, "응답 모델", CONTROL_HEIGHT)
+        self.served.setObjectName("responseModel")
+        self.requested = self.add_row(box, "요청" if provider == "gpt" else "설정", ROW_HEIGHT)
+        self.requested.setObjectName("muted")
+        self.requested.parentWidget().hide()
+        self.status, self.cache = Text("모델 대기"), Text("")
         self.status.setObjectName("muted")
         self.cache.setObjectName("muted")
-        footer = QWidget()
-        footer.setFixedHeight(15)
-        row = layout(footer, QHBoxLayout, spacing=6)
-        dot = QWidget()
-        dot.setFixedWidth(16)
+        self.status_button = QPushButton()
+        self.status_button.setObjectName("statusButton")
+        self.status_button.setFixedSize(STATUS_WIDTH, CONTROL_HEIGHT)
+        status_row = layout(self.status_button, QHBoxLayout, (INSET, 0, INSET, 0), 4)
         self.dot = StatusDot()
-        dot_box = layout(dot, QHBoxLayout)
-        dot_box.addWidget(self.dot, 0, Qt.AlignmentFlag.AlignCenter)
-        self.status.setFixedWidth(54)
-        row.addWidget(dot)
-        row.addWidget(self.status)
-        row.addWidget(self.cache, 1)
-        box.addWidget(footer)
+        status_row.addWidget(self.dot)
+        status_row.addWidget(self.status, 1)
+        status_arrow = ControlMark("chevron-right", size=12)
+        status_row.addWidget(status_arrow)
+        self.status_button.clicked.connect(lambda: owner.show_details(self.status_button, self.brand.text()+" · 모델 관측", self.status.toolTip()))
+        self.served.parentWidget().layout().addWidget(self.status_button)
+        self.cache_button = QPushButton()
+        self.cache_button.setObjectName("cacheButton")
+        self.cache_button.setFixedHeight(CONTROL_HEIGHT)
+        cache_row = layout(self.cache_button, QHBoxLayout, (INSET, 0, INSET, 0), FIELD_GAP)
+        self.cache.setFixedWidth(FIELD_WIDTH)
+        self.cache_metric, self.cache_age = Text(""), Text("")
+        self.cache_metric.setObjectName("cacheValue")
+        self.cache_age.setObjectName("muted")
+        self.cache_age.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        cache_row.addWidget(self.cache)
+        cache_row.addWidget(self.cache_metric)
+        cache_row.addWidget(self.cache_age, 1)
+        arrow = ControlMark("chevron-right", size=12)
+        cache_row.addWidget(arrow)
+        self.cache_button.clicked.connect(lambda: owner.show_details(self.cache_button, self.brand.text()+" · 캐시 적중률", self.cache.toolTip(), cache=True))
+        box.addWidget(self.cache_button)
 
     @staticmethod
     def add_row(box, name, height):
         widget = QWidget()
         widget.setFixedHeight(height)
-        row = layout(widget, QHBoxLayout, spacing=6)
-        blank = QWidget()
-        blank.setFixedWidth(16)
+        row = layout(widget, QHBoxLayout, (INSET, 0, 0, 0), FIELD_GAP)
         caption = Text(name)
         caption.setObjectName("muted")
-        caption.setFixedWidth(54)
+        caption.setFixedWidth(FIELD_WIDTH)
         value = Text("—")
         value.caption_label = caption
-        row.addWidget(blank)
         row.addWidget(caption)
         row.addWidget(value, 1)
         box.addWidget(widget)
         return value
 
     def update_data(self, value):
+        self.cache_button.cache_record = value.get("usage")
+        self.cache_button.cache_available = value.get("metrics_available", True)
         self.title.set_title(value.get("title") or "현재 작업 없음")
+        key = "codex_thread" if self.provider == "gpt" else "claude_session"
+        self.mode.setText(selection_text(self.owner.settings.get(key)))
+        self.mode.setToolTip("메뉴에서 고른 작업을 표시합니다." if self.owner.settings.get(key) else "최근 활동이 있는 작업을 자동으로 표시합니다.")
         if self.provider == "gpt":
             caption, requested, effort, detail = gpt_request(value)
             self.requested.caption_label.setText(caption)
             self.requested.setToolTip(detail)
-            status, tone = route_status(value)
-            self.status.setToolTip(value.get("detail") or "서버 응답의 모델명 관측 상태입니다.")
             served = value.get("served") or ("모델명 미수집" if value.get("verdict")=="OBSERVATION_GAP" else "—")
         else:
             requested, effort = value.get("requested_model"), value.get("requested_effort")
-            status, served = value.get("label", "대기"), value.get("served") or "기록 대기"
-            tone = "blue" if value.get("state")=="running" else "neutral"
+            served = value.get("served") or "기록 대기"
+            self.requested.setToolTip("CLI를 시작할 때의 모델·추론 설정입니다. 실제 응답 모델과 다를 수 있습니다.")
         self.requested.setText((model_text(requested) or "—")+(" · "+effort if effort else ""))
         self.served.setText(model_text(served))
+        self.served.setToolTip(model_text(served))
+        status, tone, detail = observation_status(self.provider, value)
+        if self.provider == "gpt" and value.get("historical_mismatches"):
+            detail += f"\n관측된 모델명 불일치: {value['historical_mismatches']}건"
         self.status.setText(status)
-        light = self.owner.settings.get("theme") == "light"
-        colors = dict(neutral="#686b75",blue="#486798",waiting="#886020",bad="#b44653") if light else dict(neutral="#a9aab1",blue="#a4bbed",waiting="#e4c18b",bad="#f09b9f")
+        self.status.setToolTip(detail)
+        theme = THEMES.get(self.owner.settings.get("theme"), THEMES["dark"])
+        colors = dict(neutral=theme["muted"], blue=theme["accent"], waiting=theme["warning"], bad=theme["danger"])
         self.status.setStyleSheet("color: "+colors[tone])
         self.dot.color = colors[tone]
         self.dot.update()
-        text, detail = usage_text(value.get("usage"), value.get("metrics_available", True))
-        self.cache.setText(text)
+        text, progress_tone = progress_status(self.provider, value)
+        self.progress.setText(text)
+        self.progress.setStyleSheet("color: "+colors[progress_tone])
+        self.progress.setToolTip("작업의 진행 상태입니다. 응답 모델 확인 여부는 아래에 따로 표시합니다.")
+        caption, metric, age, detail = usage_parts(value.get("usage"), value.get("metrics_available", True))
+        self.cache.setText(caption)
+        self.cache_metric.setText(metric)
+        self.cache_age.setText(age)
+        self.cache_metric.ensurePolished()
+        # Integer advance can round down and elide the final percent glyph.
+        metric_width = QFontMetricsF(self.cache_metric.font()).horizontalAdvance(self.cache_metric.text())
+        self.cache_metric.setFixedWidth(math.ceil(metric_width)+1)
         self.cache.setToolTip(detail)
+        provider = self.brand.text()
+        self.cache_button.setAccessibleName(provider+" 입력 캐시 · "+usage_text(value.get("usage"), value.get("metrics_available", True))[0])
+        self.cache_button.setAccessibleDescription(detail)
+        self.status_button.setAccessibleName(provider+" 모델 관측 · "+status)
+        self.status_button.setAccessibleDescription(self.status.toolTip())
+
+
+class CacheBar(QWidget):
+    def __init__(self, owner):
+        super().__init__()
+        self.owner, self.fraction = owner, 0
+        self.setFixedHeight(8)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        colors = THEMES.get(self.owner.settings.get("theme"), THEMES["dark"])
+        painter.setBrush(QColor(colors["edge"]))
+        painter.drawRoundedRect(self.rect(), 4, 4)
+        painter.setClipRect(0, 0, round(self.width()*self.fraction), self.height())
+        gradient = QLinearGradient(0,0,max(self.width()*self.fraction,1),0)
+        gradient.setColorAt(0,QColor(colors["accent_start"]))
+        gradient.setColorAt(1,QColor(colors["accent_end"]))
+        painter.setBrush(gradient)
+        painter.drawRoundedRect(self.rect(), 4, 4)
+
+
+class CacheDetails(QWidget):
+    def __init__(self, owner):
+        super().__init__()
+        self.owner = owner
+        self.data = {"known": False}
+        box = layout(self, QVBoxLayout, spacing=8)
+        self.hero = QWidget()
+        top = layout(self.hero, QHBoxLayout, spacing=8)
+        self.number, self.age = QLabel(), QLabel()
+        self.number.setObjectName("cacheNumber")
+        self.age.setObjectName("muted")
+        top.addWidget(self.number, 1)
+        top.addWidget(self.age)
+        self.bar = CacheBar(owner)
+        self.legend = QWidget()
+        row = layout(self.legend, QHBoxLayout, spacing=6)
+        self.cached, self.other = QLabel(), QLabel()
+        self.cached_dot, self.other_dot = StatusDot(), StatusDot()
+        for widget in (self.cached, self.other):widget.setObjectName("muted")
+        row.addWidget(self.cached_dot);row.addWidget(self.cached)
+        row.addStretch(1)
+        row.addWidget(self.other_dot);row.addWidget(self.other)
+        self.empty = QLabel()
+        self.empty.setObjectName("muted")
+        self.empty.setTextFormat(Qt.TextFormat.PlainText)
+        self.parts = (self.hero, self.bar, self.legend)
+        for widget in (*self.parts, self.empty):box.addWidget(widget)
+
+    def update_data(self, usage, available=True):
+        self.data = cache_breakdown(usage, available)
+        for widget in self.parts:widget.setVisible(self.data["known"])
+        self.empty.setVisible(not self.data["known"])
+        if self.data["known"]:
+            self.number.setText(self.data["percent"])
+            self.age.setText(self.data["age"])
+            self.cached.setText(f"적중 {self.data['cached']:,}")
+            self.other.setText(f"미적중 {self.data['other']:,}")
+            self.cached.setToolTip(f"캐시에서 읽은 입력 {self.data['cached']:,} 토큰")
+            self.other.setToolTip(f"캐시에서 읽지 않은 입력 {self.data['other']:,} 토큰")
+            colors = THEMES.get(self.owner.settings.get("theme"),THEMES["dark"])
+            self.cached_dot.color, self.other_dot.color = colors["accent"], colors["muted"]
+            self.cached_dot.update();self.other_dot.update()
+            self.bar.fraction = self.data["fraction"]
+            self.setAccessibleName(f"입력 토큰 {self.data['total']:,}개 중 {self.data['percent']} 재사용")
+        else:
+            self.empty.setText(self.data["message"])
+        self.bar.update()
+
+
+class DetailPopup(ChoicePopup):
+    """Keyboard-accessible details using the same native dismissal as menus."""
+    def __init__(self, owner):
+        super().__init__(owner)
+        self.setFixedWidth(CARD_WIDTH)
+        self.box.setContentsMargins(12, 12, 12, 12)
+        self.box.setSpacing(8)
+        self.heading = QLabel()
+        self.heading.setTextFormat(Qt.TextFormat.PlainText)
+        self.heading.setObjectName("detailHeading")
+        self.body = QLabel()
+        self.body.setTextFormat(Qt.TextFormat.PlainText)
+        self.body.setWordWrap(True)
+        self.body.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.body.setObjectName("muted")
+        self.cache_graph = CacheDetails(owner)
+        self.cache_mode = False
+        self.cache_graph.hide()
+        self.box.addWidget(self.heading)
+        self.box.addWidget(self.body)
+        self.box.addWidget(self.cache_graph)
+        self.anchor = None
+
+    def open_at(self, anchor, beside=False):
+        # Size the wrapped body at the actual card width, not QLabel's preferred
+        # line width. Otherwise adjustSize can crop the first and last lines.
+        self.ensurePolished()
+        margins = self.box.contentsMargins()
+        width = self.width()-2*self.frameWidth()-margins.left()-margins.right()
+        content = self.cache_graph if self.cache_mode else self.body
+        # Release the previous minimum before asking for the new content height.
+        # A short model detail must not inherit the preceding cache detail's size.
+        content.setMinimumHeight(0)
+        content.setMaximumHeight(16777215)
+        content.setFixedWidth(width)
+        if self.cache_mode:
+            for widget in self.cache_graph.findChildren(QWidget):widget.ensurePolished()
+            self.cache_graph.layout().invalidate()
+            height = self.cache_graph.layout().sizeHint().height()
+        else:
+            height = self.body.heightForWidth(width)
+        content.setFixedHeight(height)
+        self.heading.setFixedHeight(self.heading.sizeHint().height())
+        self.setFixedHeight(margins.top()+margins.bottom()+2*self.frameWidth()
+                            +self.heading.height()+self.box.spacing()+height)
+        super().open_at(anchor, beside)
+
+    def display(self, anchor, title, text, cache=False):
+        if self.isVisible() and self.anchor is anchor:
+            self.hide()
+            return
+        self.anchor = anchor
+        self.cache_mode = cache
+        self.body.setVisible(not cache)
+        self.cache_graph.setVisible(cache)
+        if cache:
+            self.cache_graph.update_data(getattr(anchor, "cache_record", None), getattr(anchor, "cache_available", True))
+        self.heading.setText(title)
+        self.body.setText(text)
+        self.setAccessibleName(title+" 상세")
+        self.open_at(anchor)
 
 
 class Panel(Surface):
@@ -380,7 +588,30 @@ class Panel(Surface):
         self.route, self.claude = {}, {}
         self.setObjectName("panel")
         self.setFixedWidth(CARD_WIDTH)
-        self.box = layout(self, QVBoxLayout, (11, 10, 11, 10))
+        self.box = layout(self, QVBoxLayout, (CARD_PADDING, CARD_PADDING, CARD_PADDING, CARD_PADDING))
+        toolbar = QWidget()
+        toolbar.setFixedHeight(CONTROL_HEIGHT)
+        top = layout(toolbar, QHBoxLayout, (INSET, 0, 0, 0), 4)
+        self.app_name = Text("Pawline")
+        self.app_name.setObjectName("muted")
+        self.theme_button = QPushButton()
+        self.theme_button.setFixedSize(CONTROL_HEIGHT, CONTROL_HEIGHT)
+        self.theme_mark = ControlMark("sun")
+        layout(self.theme_button, QHBoxLayout).addWidget(self.theme_mark, 0, Qt.AlignmentFlag.AlignCenter)
+        self.theme_button.clicked.connect(self.toggle_theme)
+        self.pin_toggle = QPushButton()
+        self.pin_mark = ControlMark("pin")
+        layout(self.pin_toggle, QHBoxLayout).addWidget(self.pin_mark, 0, Qt.AlignmentFlag.AlignCenter)
+        self.pin_toggle.setObjectName("pinToggle")
+        self.pin_toggle.setCheckable(True)
+        self.pin_toggle.setFixedSize(CONTROL_HEIGHT, CONTROL_HEIGHT)
+        self.pin_toggle.setAccessibleName("창 고정")
+        self.pin_toggle.clicked.connect(self.toggle_pin)
+        top.addWidget(self.app_name, 1)
+        top.addWidget(self.pin_toggle)
+        top.addWidget(self.theme_button)
+        self.box.addWidget(toolbar)
+        self.box.addSpacing(6)
         self.gpt = ProviderSection("gpt", self)
         self.anthropic = ProviderSection("claude", self)
         self.box.addWidget(self.gpt)
@@ -394,6 +625,7 @@ class Panel(Surface):
         self.box.addWidget(separator)
         self.box.addWidget(self.anthropic)
         self.popup = ChoicePopup(self)
+        self.detail_popup = DetailPopup(self)
         self.title_popup = TitlePopup(self)
         self.title_hover = False
         self.title_anchor = None
@@ -408,18 +640,39 @@ class Panel(Surface):
 
     def apply_theme(self):
         c = THEMES.get(self.settings.get("theme"), THEMES["dark"])
-        css = (f'QWidget {{ font-family: "Pretendard Variable"; font-size: 13px; color: {c["foreground"]}; }}'
-               f'#panel, #popup {{ background: {c["background"]}; border: 1px solid {c["edge"]}; border-radius: 10px; }}'
+        css = (f'QWidget {{ font-family: "Pretendard Variable"; font-size: {FONT_SIZES["body"]}px; color: {c["foreground"]}; }}'
+               f'#panel, #popup {{ background: {c["background"]}; border: 1px solid {c["edge"]}; border-radius: 12px; }}'
                f'#divider {{ background: {c["edge"]}; }}'
-               f'#muted {{ font-size: 12px; color: {c["muted"]}; }}'
-               f'#claudeBrand {{ color: {c["claude"]}; font-weight: 600; }} #gptBrand {{ font-weight: 600; }}'
+               f'#muted {{ font-size: {FONT_SIZES["secondary"]}px; color: {c["muted"]}; }}'
+               f'#claudeBrand, #gptBrand {{ font-size: {FONT_SIZES["body"]}px; font-weight: 500; color: {c["secondary"]}; }}'
                'QPushButton { border: none; background: transparent; border-radius: 6px; padding: 0; }'
                f'QPushButton:hover, #titlePopup {{ background: {c["hover"]}; border-radius: 6px; }}'
-               f'#titleButton QLabel {{ font-size: 12px; color: {c["task"]}; }}')
-        for widget in (self, self.popup, self.title_popup):
+               f'QPushButton:focus {{ border: 1px solid {c["muted"]}; }}'
+               f'#titleButton QLabel {{ font-size: {FONT_SIZES["heading"]}px; font-weight: 600; color: {c["foreground"]}; }}'
+               f'#responseModel {{ font-size: {FONT_SIZES["body"]}px; font-weight: 500; color: {c["secondary"]}; }}'
+               f'#cacheValue {{ font-size: {FONT_SIZES["body"]}px; font-weight: 600; }}'
+               f'#cacheNumber {{ font-size: {FONT_SIZES["metric"]}px; font-weight: 600; }}'
+               f'#pinToggle:checked {{ background: {c["selected"]}; }}'
+               f'#cacheButton {{ background: {c["inset"]}; border-radius: 6px; }}'
+               f'#cacheButton:hover {{ background: {c["selected"]}; }}'
+               '#detailHeading { font-weight: 600; }')
+        for widget in (self, self.popup, self.title_popup, self.detail_popup):
             widget.setStyleSheet(css)
+            apply_font_axes(widget)
+            for mark in widget.findChildren(ControlMark):
+                mark.ink = c["muted"]
+                mark.update()
+        self.theme_mark.name = "moon" if self.settings.get("theme") == "light" else "sun"
+        self.theme_mark.ink = c["muted"]
+        self.theme_mark.update()
+        action = "어두운 화면으로 전환" if self.settings.get("theme") == "light" else "밝은 화면으로 전환"
+        self.theme_button.setToolTip(action)
+        self.theme_button.setAccessibleName(action)
+        self._sync_pin()
         self.gpt.mark.ink = c["foreground"]
         self.gpt.mark.update()
+        if self.route or self.claude:
+            self.update_data(self.route, self.claude)
 
     def screen_area(self):
         screen = QApplication.screenAt(self.pet.pos()) if self.pet else QApplication.primaryScreen()
@@ -438,9 +691,35 @@ class Panel(Surface):
             self.move(*point)
 
     def reveal(self):
+        self._sync_pin()
         self.hide_timer.stop()
         self.place()
         self.show()
+
+    def _sync_pin(self):
+        self.pin_toggle.setChecked(self.pinned)
+        colors = THEMES.get(self.settings.get("theme"), THEMES["dark"])
+        self.pin_mark.active = self.pinned
+        self.pin_mark.ink = colors["foreground"] if self.pinned else colors["muted"]
+        self.pin_mark.update()
+        self.pin_toggle.setToolTip("창 고정 해제" if self.pinned else "창 고정")
+        self.pin_toggle.setAccessibleDescription("고정됨" if self.pinned else "고정되지 않음")
+
+    def toggle_theme(self):
+        self.popup.hide()
+        self.detail_popup.hide()
+        self.title_popup.hide()
+        self.settings["theme"] = "light" if self.settings.get("theme", "dark") == "dark" else "dark"
+        self.apply_theme()
+        self.save()
+
+    def toggle_pin(self):
+        self.pinned = not self.pinned
+        self._sync_pin()
+        if self.pinned:
+            self.reveal()
+        else:
+            self.hide_timer.start(420)
 
     def enterEvent(self, event):
         self.hide_timer.stop()
@@ -449,7 +728,7 @@ class Panel(Surface):
         self.hide_timer.start(420)
 
     def _hide_if_outside(self):
-        if not self.pinned and not self.underMouse() and not self.title_hover and not self.popup.isVisible() and not (self.pet and self.pet.underMouse()):
+        if not self.pinned and not self.underMouse() and not self.title_hover and not self.popup.isVisible() and not self.detail_popup.isVisible() and not (self.pet and self.pet.underMouse()):
             self.hide()
             self.title_popup.hide()
 
@@ -458,7 +737,7 @@ class Panel(Surface):
         self.title_timer.start(180)
 
     def _show_title(self):
-        if self.popup.isVisible():
+        if self.popup.isVisible() or self.detail_popup.isVisible():
             return
         if self.title_anchor:
             self.title_popup.reveal(self.title_anchor)
@@ -466,6 +745,7 @@ class Panel(Surface):
             self.title_popup.hide()
 
     def choose_provider(self, provider):
+        self.detail_popup.hide()
         value = self.route if provider == "gpt" else self.claude
         config_key = "codex_thread" if provider == "gpt" else "claude_session"
         entries = [(s["thread_id"] if provider=="gpt" else s.get("selection_key", s.get("session_id")), s.get("title") or "이름 없는 작업") for s in value.get("sessions", [])]
@@ -473,30 +753,38 @@ class Panel(Surface):
             if key:self.settings[config_key] = key
             else:self.settings.pop(config_key, None)
             self.save()
-        self.popup.setFixedWidth(250)
+        self.popup.setFixedWidth(276)
         self.popup.populate(entries, self.settings.get(config_key), choose)
         self.popup.open_at(self.gpt.title if provider=="gpt" else self.anthropic.title)
 
-    def actions(self, surface="panel"):
+    def actions(self, surface="pet"):
+        self.detail_popup.hide()
         def choose(key):
-            if key=="theme":
-                self.settings["theme"] = "light" if self.settings.get("theme", "dark")=="dark" else "dark"
-                self.apply_theme();self.save()
-            elif key=="pin":self.pinned = not self.pinned
-            elif key=="walk":self.pet.walking = not self.pet.walking
+            if key=="walk":self.pet.walking = not self.pet.walking
             elif key=="pet":self.pet.gesture = ("waving", time.monotonic()+2)
             elif key=="quit":QApplication.quit()
-        actions = menu_actions(surface, theme=self.settings.get("theme", "dark"), pinned=self.pinned,
-                               walking=bool(self.pet and self.pet.walking))
+        actions = menu_actions(surface, walking=bool(self.pet and self.pet.walking))
         self.popup.hide()
-        self.popup.setFixedWidth(182 if surface == "panel" else 164)
+        self.popup.setFixedWidth(164)
         self.popup.populate(actions,None,choose,auto=False)
-        self.popup.open_at(self.gpt.options_button if surface == "panel" else self, beside=surface == "pet")
+        self.popup.open_at(self, beside=True)
+
+    def show_details(self, anchor, title, text, cache=False):
+        self.popup.hide()
+        self.title_popup.hide()
+        self.detail_popup.display(anchor, title, text, cache)
 
     def update_data(self, route, claude):
+        self._sync_pin()
         self.route, self.claude = route, claude
         self.gpt.update_data(route)
         self.anthropic.update_data(claude)
+        if self.detail_popup.isVisible() and self.detail_popup.anchor:
+            self.detail_popup.body.setText(self.detail_popup.anchor.accessibleDescription())
+            if self.detail_popup.cache_mode:
+                anchor = self.detail_popup.anchor
+                self.detail_popup.cache_graph.update_data(anchor.cache_record, anchor.cache_available)
+            self.detail_popup.open_at(self.detail_popup.anchor)
         if self.title_popup.isVisible() and isinstance(self.title_popup.anchor, Text):
             self.title_popup.reveal(self.title_popup.anchor)
 

@@ -2,15 +2,15 @@
 
 Codex와 Claude Code의 작업 상태, 요청·응답 모델, 입력 캐시 사용량을 펫 옆에서 확인하는 데스크톱 도구입니다.
 
-<img src="assets/screenshots/overview.png" width="443" height="233" alt="Pawline의 GPT·Claude 정보창과 흰 고양이 펫이 함께 표시된 전체 사용 화면">
+<img src="assets/screenshots/overview.png" width="444" height="307" alt="Pawline의 GPT·Claude 정보창과 흰 고양이 펫이 함께 표시된 전체 사용 화면">
 
 <sub>사용 예시 · 펫: <a href="https://petdex.dev/pets/fluff">Fluff — Sejal R.</a></sub>
 
 ## 다운로드
 
-**[Windows · 설치 EXE](https://github.com/spac0301/pawline/releases/download/v0.2.8/Pawline-Setup-0.2.8-x64.exe)** — 미서명 시험판. Windows 11의 Smart App Control에서 실행이 차단될 수 있습니다. [실행 제한·설치 안내](WINDOWS.md)
+**[Windows · 설치 EXE](https://github.com/spac0301/pawline/releases/download/v0.2.9/Pawline-Setup-0.2.9-x64.exe)** — 미서명 시험판. Windows 11의 Smart App Control에서 실행이 차단될 수 있습니다. [실행 제한·설치 안내](WINDOWS.md)
 
-**[Linux · ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.8/pawline-0.2.8-source.zip)** — Python·GTK3 환경에서 실행합니다. [설치 안내](INSTALL.md)
+**[Linux · ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.9/pawline-0.2.9-source.zip)** — Python·GTK3 환경에서 실행합니다. [설치 안내](INSTALL.md)
 
 ## 시작하기
 
@@ -18,7 +18,7 @@ Codex와 Claude Code의 작업 상태, 요청·응답 모델, 입력 캐시 사�
 2. [Fluff 원본 페이지](https://petdex.dev/pets/fluff)에서 펫을 받습니다. `pet.json`과 `spritesheet.webp`를 사용자 홈의 `.codex/pets/fluff` 폴더에 넣습니다.
 3. Pawline을 실행하면 펫과 정보창을 사용할 수 있습니다.
 
-펫에 마우스를 올리거나 클릭하면 정보창을 볼 수 있습니다. 긴 제목과 잘린 상태 문구는 마우스를 올렸을 때 펼쳐집니다.
+펫에 마우스를 올리거나 클릭하면 정보창을 볼 수 있습니다. 상단 핀으로 창을 고정하고, 해·달 버튼으로 테마를 바꿉니다. 입력 캐시를 누르면 마지막 입력의 적중 비율을 그래프로 확인합니다. 긴 제목과 잘린 상태 문구는 마우스를 올렸을 때 펼쳐집니다.
 실제 응답 모델을 관측하는 기능은 추가 연결이 필요합니다. [Windows](WINDOWS.md#응답-모델-관측-연결) · [Linux](INSTALL.md#응답-모델-관측-연결)
 
 ## 안내
@@ -30,6 +30,6 @@ Codex와 Claude Code의 작업 상태, 요청·응답 모델, 입력 캐시 사�
 <details>
 <summary>개발 문서와 다른 다운로드</summary>
 
-[수집기 업데이트 패키지](https://github.com/spac0301/pawline/releases/download/v0.2.8/pawline-0.2.8-observer.zip) · [포터블 Windows ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.8/pawline-0.2.8-windows-x64.zip) · [구조](docs/architecture.md) · [변경 기록](CHANGELOG.md) · [검증 범위](VERIFICATION.md)
+[수집기 업데이트 패키지](https://github.com/spac0301/pawline/releases/download/v0.2.9/pawline-0.2.9-observer.zip) · [포터블 Windows ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.9/pawline-0.2.9-windows-x64.zip) · [구조](docs/architecture.md) · [변경 기록](CHANGELOG.md) · [검증 범위](VERIFICATION.md)
 
 </details>

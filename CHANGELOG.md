@@ -1,3 +1,20 @@
+# 0.2.9 — consistent compact UI and input-cache charts
+
+GTK and Qt share typography, colors and row geometry. Task titles, observed
+models, cache values and secondary labels use a defined visual hierarchy, with
+aligned field columns and vector chevrons. A pin button and a sun/moon button
+provide direct window pinning and theme changes without a duplicate menu.
+
+Cache details use a proportional chart of the last input record: cache reads
+versus all other input tokens. The fixed gradient is decorative; only bar
+length represents the fraction. Missing usage remains unknown, not zero.
+Work progress and response-model evidence have separate labels. Requested or
+configured models stay in details and never stand in for an observed response.
+
+Detail windows fit their content, and a Qt width-rounding issue that clipped
+the percent glyph is fixed. Windows packages remain unsigned experimental
+builds; the UI update does not resolve Smart App Control restrictions.
+
 # 0.2.8 — replace the observer without restarting Codex
 
 The relay and native CLI stay running while a separate metadata worker is

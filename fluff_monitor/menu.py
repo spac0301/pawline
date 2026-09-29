@@ -187,12 +187,18 @@ class TitleReveal(Gtk.Window):
             y -= (height - allocation.height) // 2
         natural = text_width + (18 if source is None else 0) + 2*inset
         area = self.get_display().get_monitor_at_point(x, y).get_workarea()
-        limit = min(420, area.x + area.width - x)
+        target = min(natural, 420, area.width)
+        x = max(area.x, min(x, area.x+area.width-target))
         pet = self.owner.pet
         if pet and y < pet.sprite_y + pet.view.height and y + height > pet.sprite_y:
-            if x < pet.sprite_x:
-                limit = min(limit, pet.sprite_x - 12 - x)
-        target = min(natural, limit)
+            if x < pet.sprite_x + pet.view.width and x + target > pet.sprite_x:
+                if pet.sprite_x - 12 - target >= area.x:
+                    x = pet.sprite_x - 12 - target
+                elif pet.sprite_x + pet.view.width + 12 + target <= area.x + area.width:
+                    x = pet.sprite_x + pet.view.width + 12
+                else:
+                    self.hide()
+                    return
         if target <= initial:
             self.hide()
             return
@@ -235,7 +241,7 @@ class MenuWindow(Gtk.Window):
         self.within_owner = False
         self.focus_check = None
         self.set_name("routing-popup")
-        self.set_title("Fluff · 메뉴")
+        self.set_title("Pawline · 메뉴")
         self.set_decorated(False)
         self.set_resizable(False)
         self.set_keep_above(True)
