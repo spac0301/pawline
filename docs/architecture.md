@@ -187,10 +187,15 @@ contents are not published. SSE line parsing scans each decoded chunk once.
 See `CHANGELOG.md` for scope and remaining review items. Use the latest source
 archive for sharing; older archives only document their original releases.
 
-The information window's `⋯` menu holds theme and pin controls. The pet's
+The information window has two direct icon buttons: pin and theme. There is no
+overflow menu or second pin command. The pin is outlined when off and filled
+when on; the sun/moon icon describes the theme available on the next click. The pet's
 right-click menu holds petting, walking and quit. The latter is temporary and
-does not have its own pin state. These action definitions are shared by GTK and
-Qt; only the pet needs reloading when applying this menu change.
+does not have its own pin state. Vector geometry and pet action definitions are
+shared by GTK and Qt; only the pet needs reloading when applying this UI change.
+
+The information hierarchy, shared geometry, reference rationale, and visual
+verification scope are documented in [UI rules](ui-design.md).
 
 The private venv uses the installed system GTK/cairo and the exact binary
 dependencies in `requirements.lock`. No global Python packages are modified.
