@@ -136,15 +136,20 @@ HTTP/SSE on pooled connections, byte-for-byte passthrough, incremental updates,
 unknown framing, metadata privacy, and explicit session correlation. No real
 provider calls are required.
 
-### 0.2.1 observation boundary
+### Observation boundary
 
 Socket callbacks enqueue into a bounded inbox (512 events and at most 16 MiB
-of conservatively estimated text). One worker aggregates metadata and publishes
+of retained UTF-8 buffers and message overhead). One worker aggregates metadata and publishes
 at one-second intervals. Filesystem IO does not run in a relay callback.
 Request metadata is enqueued before the corresponding bytes are sent, preserving
 request/response ordering; server bytes are forwarded before observation.
 Callback exceptions never close a relay socket. A full inbox or a reducer fault
-disables observation for that adapter instance and publishes unknown status.
+invalidates all connections already seen and publishes unknown status.
+Fresh monotonically numbered WebSocket connections or HTTP exchanges resume
+observation without restarting the adapter. Old connection IDs remain rejected,
+and old requests keep their loss markers; response identity is never guessed.
+A reserved generation barrier cannot be lost with a full queue or acknowledged
+by a snapshot that was being written when the loss occurred.
 It never blocks real traffic to preserve telemetry or invents missing metadata.
 
 The reducer retains at most 256 history rows, 128 session summaries and 128
