@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $project = Split-Path $PSScriptRoot -Parent
-$setup = Join-Path $project 'installer\Pawline-Setup-0.2.8-x64.exe'
+$setup = Join-Path $project 'installer\Pawline-Setup-0.2.9-x64.exe'
 $temporary = Join-Path $env:RUNNER_TEMP ('Pawline install check ' + [Guid]::NewGuid())
 $app = Join-Path $temporary 'app'
 New-Item -ItemType Directory -Path $temporary | Out-Null
