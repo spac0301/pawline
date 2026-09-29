@@ -6,8 +6,13 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import unittest
+import win32api
 
 from PIL import Image, ImageDraw
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from fluff_monitor import observer_runtime
+from test_observer_process import ObserverProcessTests
 
 
 def main():
@@ -17,6 +22,11 @@ def main():
     output = Path(sys.argv[2]).resolve()
     pet = dist / "pawline/pawline.exe"
     capture = dist / "pawline-capture/pawline-capture.exe"
+    for executable, name in ((pet, 'Pawline'), (capture, 'Pawline Relay')):
+        description = win32api.GetFileVersionInfo(str(executable), r'\StringFileInfo\040904B0\FileDescription')
+        if description != name:
+            raise RuntimeError(f'Incorrect task-manager identity: {description}')
+    observer_runtime.validate((capture.parent / 'observer-runtime.zip').read_bytes())
     required_python = (Path(__file__).resolve().parents[1] / "windows/python-version.txt").read_text().strip()
     for executable in (pet, capture):
         if not executable.is_file():
@@ -75,10 +85,22 @@ def main():
             raise RuntimeError(f"Packaged Qt launch failed: {launched.stderr}")
         if (root / "state/desktop.json").exists():
             raise RuntimeError("A helper invocation started an observer.")
+        before = hashlib.sha256(capture.read_bytes()).hexdigest()
+        case = ObserverProcessTests('test_native_cli_and_same_tls_socket_survive_observer_replacement')
+        case.capture_command = [str(capture)]
+        result = unittest.TestResult()
+        case.run(result)
+        if not result.wasSuccessful():
+            raise RuntimeError(f'Packaged observer replacement failed: {result.errors + result.failures}')
+        if hashlib.sha256(capture.read_bytes()).hexdigest() != before:
+            raise RuntimeError('Worker update changed the running relay executable')
         result = {
             "passed": True, "platform": sys.platform, "model_calls": 0,
             "bundled_python": required_python,
             "native_cli_handoff": True, "native_stdio_and_exit_status": True,
+            "observer_code_update_without_native_restart": True,
+            "same_tls_connection_and_response_preserved": True,
+            "task_manager_identity": "Pawline",
             "packaged_qt_start_and_exit": True,
             "runtime_notices_included": True, "unused_qt_addons_absent": True,
             "synthetic_sprite_only": True, "interactive_desktop_verified": False,

@@ -12,6 +12,25 @@ from fluff_monitor import capture
 
 
 class CliHandoffTests(unittest.TestCase):
+    def test_worker_start_failure_does_not_prevent_native_cli_start(self):
+        self.configure()
+        with patch.dict(os.environ, {'FLUFF_DESKTOP_CAPTURE':'1'}), \
+                patch.object(capture, 'ObserverHost', side_effect=RuntimeError('fixture startup failure')), \
+                patch.object(capture.proxy, 'CertAuthority') as ca, \
+                patch.object(capture, 'run_native_cli', return_value=0) as execute:
+            self.assertEqual(capture.main(['app-server']), 0)
+        execute.assert_called_once()
+        self.assertNotIn('HTTPS_PROXY', execute.call_args.args[2])
+        ca.return_value.close.assert_called_once()
+
+    def test_reload_command_needs_no_native_cli_and_starts_no_second_host(self):
+        with patch.object(capture, 'request_reload', return_value={'version':'fixture'}), \
+                patch.object(capture, 'run_native_cli') as native, \
+                patch.object(capture, 'ObserverHost') as host:
+            self.assertEqual(capture.main(['--fluff-reload-observer']), 0)
+        native.assert_not_called()
+        host.assert_not_called()
+
     def setUp(self):
         self.host_environment = dict(os.environ)
         self.tmp = tempfile.TemporaryDirectory()
@@ -47,7 +66,7 @@ class CliHandoffTests(unittest.TestCase):
         self.configure()
         snapshot = self.root / "desktop.json"
         snapshot.write_bytes(b'{"owner":"desktop"}\n')
-        with patch.object(capture, "run_native_cli", return_value=0) as execute, patch.object(capture, "DesktopCapture") as observer, patch.object(capture.proxy, "CertAuthority") as ca:
+        with patch.object(capture, "run_native_cli", return_value=0) as execute, patch.object(capture, "ObserverHost") as observer, patch.object(capture.proxy, "CertAuthority") as ca:
             capture.main(["app-server"])
         native = str(Path(sys.executable).resolve())
         execute.assert_called_once_with(native, ["app-server"], dict(os.environ), replace_process=True)
@@ -74,7 +93,7 @@ class CliHandoffTests(unittest.TestCase):
         execute.assert_not_called()
 
     def test_missing_configuration_fails_without_creating_an_observer(self):
-        with patch.object(capture, "run_native_cli", return_value=0) as execute, patch.object(capture, "DesktopCapture") as observer:
+        with patch.object(capture, "run_native_cli", return_value=0) as execute, patch.object(capture, "ObserverHost") as observer:
             self.assertEqual(capture.main(["app-server"]), 1)
         execute.assert_not_called()
         observer.assert_not_called()

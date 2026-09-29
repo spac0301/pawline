@@ -17,7 +17,7 @@ from test_transport import frame, recv_head, deflate_msg
 
 class SecurityTests(unittest.TestCase):
     def test_existing_proxy_is_not_silently_overwritten(self):
-        with patch.dict('os.environ',{'CODEX_ROUTING_REAL_CLI':sys.executable,'FLUFF_DESKTOP_CAPTURE':'1','HTTPS_PROXY':'http://example.invalid:3128'},clear=True),patch.object(capture,'DesktopCapture') as monitor,patch.object(capture.subprocess,'Popen') as child:
+        with patch.dict('os.environ',{'CODEX_ROUTING_REAL_CLI':sys.executable,'FLUFF_DESKTOP_CAPTURE':'1','HTTPS_PROXY':'http://example.invalid:3128'},clear=True),patch.object(capture,'ObserverHost') as monitor,patch.object(capture.subprocess,'Popen') as child:
             self.assertEqual(capture.main(['app-server']),1)
             monitor.assert_not_called();child.assert_not_called()
 
