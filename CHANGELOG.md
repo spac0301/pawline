@@ -1,3 +1,11 @@
+# 0.2.7 — keep tasks and usage visible when observation stops
+
+GPT task selection and input-cache usage now come from the native task records
+independently of response-model capture. When capture stops, GTK and Qt retain
+the task list and usage, label the recorded model as a setting, and leave the
+unobserved server response unknown. Recorded settings never replace an observed
+request or create a model-match result.
+
 # 0.2.6 — avoid unchanged snapshot rewrites
 
 Activity and routing snapshots are written only when their contents change.
