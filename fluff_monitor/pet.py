@@ -13,6 +13,7 @@ import sys
 import time
 from pathlib import Path
 from collections import deque
+from string import Template
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "vendor/claude-pet"))
@@ -25,71 +26,86 @@ from . import views
 from .storage import atomic_json, read_json, state_dir, SnapshotReader
 from .catalog import display_title, SnapshotCatalog
 from .presentation import age_text, usage_text, route_status, menu_actions, model_text, gpt_request
+from .presentation import CARD_WIDTH, CARD_PADDING, ROW_HEIGHT, CONTROL_HEIGHT
+from .presentation import CONTENT_INSET, FIELD_WIDTH, FIELD_GAP, STATUS_WIDTH
+from .presentation import progress_status, observation_status, selection_text, usage_parts, cache_breakdown, FONT_SIZES, THEMES, toolbar_icon
 from .pet_state import MismatchAlerts, MotionCycle
 from .menu import MenuWindow, TitleReveal, menu_action, beside_position
 from .identity import APP_NAME, ICON, set_process_name
 
-CSS = b"""
+CSS = Template("""
 #routing-popup { background: transparent; }
 #routing-panel, #routing-actions { font-family: 'Pretendard Variable', 'Noto Sans CJK KR', Sans; background: transparent; }
-#routing-card { background: #232427; border: 1px solid #3a3b3f; border-radius: 12px; padding: 10px 11px; }
-#routing-panel label, #routing-actions label { color: #eeeeef; font-size: 13px; font-weight: 400; }
-#routing-panel .title { font-size: 13px; font-weight: 600; }
-#routing-panel .model { font-size: 13px; font-weight: 500; }
-#routing-panel .muted, #routing-panel .chip { font-size: 12px; color: #a9aab1; }
-#routing-panel .task-title { font-size: 12px; font-weight: 500; color: #c6c7ce; }
-#routing-panel .provider-openai { color: #eeeeef; font-weight: 600; }
-#routing-panel .provider-anthropic { color: #e8ab95; font-weight: 600; }
-#routing-panel .neutral { color: #a9aab1; }
-#routing-panel .good { color: #86c9a5; }
-#routing-panel .bad { color: #f09b9f; }
-#routing-panel .waiting { color: #e4c18b; }
-#routing-panel .blue { color: #a4bbed; }
+#routing-card { background: $dark_background; border: 1px solid $dark_edge; border-radius: 12px; padding: 12px; }
+#routing-panel label, #routing-actions label { color: $dark_foreground; font-size: ${body}px; font-weight: 400; }
+#routing-panel .title { font-size: ${body}px; font-weight: 600; }
+#routing-panel .model { font-size: ${body}px; font-weight: 500; color: $dark_secondary; }
+#routing-panel .requested, #routing-panel .muted, #routing-panel .chip { font-size: ${secondary}px; color: $dark_muted; }
+#routing-panel .task-title { font-size: ${heading}px; font-weight: 600; }
+#routing-panel .cache-value { font-size: ${body}px; font-weight: 600; }
+#routing-panel .provider-openai, #routing-panel .provider-anthropic { font-size: ${body}px; font-weight: 500; color: $dark_secondary; }
+#routing-panel .neutral { color: $dark_muted; }
+#routing-panel .good { color: $dark_positive; }
+#routing-panel .bad { color: $dark_danger; }
+#routing-panel .waiting { color: $dark_warning; }
+#routing-panel .blue { color: $dark_accent; }
 #routing-panel button, #routing-actions menuitem { border: none; border-radius: 6px; background-image: none;
-  background: transparent; color: #c6c7ce; box-shadow: none; text-shadow: none; padding: 3px 5px; min-height: 18px; min-width: 18px; }
-#routing-panel button:hover, #routing-actions menuitem:hover { background: #36373c; color: #ffffff; }
-#routing-panel separator { background: #3a3b3f; min-height: 1px; margin: 7px 0; }
-#routing-actions { background: #292a2e; border: 1px solid #43444a; border-radius: 10px; padding: 5px; }
+  background: transparent; color: $dark_foreground; box-shadow: none; text-shadow: none; padding: 3px 5px; min-height: 18px; min-width: 18px; }
+#routing-panel button:hover, #routing-actions menuitem:hover { background: $dark_hover; }
+#routing-panel separator { background: $dark_edge; min-height: 1px; margin: 7px 0; }
+#routing-actions { background: $dark_background; border: 1px solid $dark_edge; border-radius: 12px; padding: 5px; }
 #routing-actions menuitem { padding: 7px 10px; }
-#routing-panel button.session-selector { padding: 0 8px; min-width: 0; min-height: 24px; }
-#routing-panel button.panel-menu { padding: 0; min-width: 24px; min-height: 24px; }
-#routing-actions .muted { font-size: 11px; color: #a9aab1; }
-#routing-actions separator { background: #43444a; min-height: 1px; margin: 4px 6px; }
-#routing-panel.light #routing-card { background: #fafafa; border-color: #d8d9de; }
-#routing-panel.light label { color: #24252a; }
-#routing-panel.light .muted, #routing-panel.light .chip, #routing-panel.light .neutral { color: #686b75; }
-#routing-panel.light .task-title { color: #50535c; }
-#routing-panel.light .provider-openai { color: #24252a; }
-#routing-panel.light .provider-anthropic { color: #98492e; }
-#routing-panel.light .good { color: #21734e; }
-#routing-panel.light .bad { color: #b44653; }
-#routing-panel.light .waiting { color: #886020; }
-#routing-panel.light .blue { color: #486798; }
-#routing-panel.light button { color: #72757c; }
-#routing-panel.light button:hover { background: #eeeeef; color: #24252a; }
-#routing-panel.light separator { background: #dedee2; }
-#routing-actions.light { background: #fafafa; border-color: #d8d9de; }
-#routing-actions.light label { color: #24252a; }
-#routing-actions.light .muted { color: #71747d; }
-#routing-actions.light menuitem:hover { background: #eeeeef; }
+#routing-panel button.session-selector { padding: 0 8px; min-width: 0; min-height: 28px; }
+#routing-panel button.cache-control { background: $dark_inset; padding: 0 8px; min-height: 28px; min-width: 0; }
+#routing-panel.light button.cache-control { background: $light_inset; }
+#routing-panel button.cache-control:hover { background: $dark_hover; }
+#routing-panel.light button.cache-control:hover { background: $light_selected; }
+#routing-panel button.status-control { padding: 0 8px; min-height: 28px; min-width: 0; }
+#routing-panel button.pin-toggle { padding: 0; min-height: 28px; min-width: 0; }
+#routing-panel button.pin-toggle:checked { background: $dark_selected; }
+#routing-panel.light button.pin-toggle:checked { background: $light_selected; }
+#routing-panel button:focus { outline: 1px solid $dark_muted; outline-offset: -1px; }
+#routing-actions.detail-menu { padding: 12px; }
+#routing-actions.detail-menu .detail-heading { font-size: ${body}px; font-weight: 600; margin-bottom: 8px; }
+#routing-actions.detail-menu .cache-number { font-size: ${metric}px; font-weight: 600; }
+#routing-panel button.toolbar-control { padding: 0; min-width: 28px; min-height: 28px; }
+#routing-actions .muted { font-size: ${secondary}px; color: $dark_muted; }
+#routing-actions separator { background: $dark_edge; min-height: 1px; margin: 4px 6px; }
+#routing-panel.light #routing-card { background: $light_background; border-color: $light_edge; }
+#routing-panel.light label { color: $light_foreground; }
+#routing-panel.light .model, #routing-panel.light .provider-openai, #routing-panel.light .provider-anthropic { color: $light_secondary; }
+#routing-panel.light .muted, #routing-panel.light .chip, #routing-panel.light .neutral, #routing-panel.light .requested { color: $light_muted; }
+#routing-panel.light .good { color: $light_positive; }
+#routing-panel.light .bad { color: $light_danger; }
+#routing-panel.light .waiting { color: $light_warning; }
+#routing-panel.light .blue { color: $light_accent; }
+#routing-panel.light button { color: $light_foreground; }
+#routing-panel.light button:hover { background: $light_hover; }
+#routing-panel.light separator { background: $light_edge; }
+#routing-actions.light { background: $light_background; border-color: $light_edge; }
+#routing-actions.light label { color: $light_foreground; }
+#routing-actions.light .muted { color: $light_muted; }
+#routing-actions.light menuitem:hover { background: $light_hover; }
 #routing-actions button { border: none; border-radius: 6px; background-image: none;
-  background: transparent; color: #c6c7ce; box-shadow: none; text-shadow: none;
+  background: transparent; color: $dark_foreground; box-shadow: none; text-shadow: none;
   padding: 7px 10px; min-height: 18px; min-width: 18px; }
-#routing-actions button:hover, #routing-actions button:checked:hover { background: #36373c; }
+#routing-actions button:hover, #routing-actions button:checked:hover { background: $dark_hover; }
 #routing-actions button:checked { background: transparent; }
 #routing-actions button.action { padding-left: 34px; }
 #routing-actions.pet-context button.action { padding-left: 12px; padding-right: 12px; }
 #routing-actions.menu-window separator { margin: 3px 6px; }
-#routing-actions .selection-dot { font-size: 13px; color: #c6c7ce; }
-#routing-actions.light button:hover, #routing-actions.light button:checked:hover { background: #eeeeef; }
+#routing-actions .selection-dot { font-size: ${body}px; color: $dark_foreground; }
+#routing-actions.light button:hover, #routing-actions.light button:checked:hover { background: $light_hover; }
 #routing-title-reveal { background: transparent; }
-#routing-title-strip { background: #36373c; border-radius: 6px; padding: 0; }
+#routing-title-strip { background: $dark_hover; border-radius: 6px; padding: 0; }
 #routing-title-strip label { font-family: 'Pretendard Variable', 'Noto Sans CJK KR', Sans;
-  font-size: 12px; font-weight: 500; color: #c6c7ce; }
-#routing-title-strip image { color: #a9aab1; }
-#routing-title-reveal.light #routing-title-strip { background: #eeeeef; }
-#routing-title-reveal.light #routing-title-strip label { color: #50535c; }
-"""
+  font-size: ${heading}px; font-weight: 600; color: $dark_foreground; }
+#routing-title-strip image { color: $dark_muted; }
+#routing-title-reveal.light #routing-title-strip { background: $light_hover; }
+#routing-title-reveal.light #routing-title-strip label { color: $light_foreground; }
+""").substitute(FONT_SIZES, **{theme+"_"+key:value for theme, colors in THEMES.items()
+                              for key, value in colors.items()}).encode()
+
 
 
 def load_app_font():
@@ -143,6 +159,17 @@ def provider_mark(image, provider, light=False):
     loader.write(svg.encode())
     loader.close()
     image.set_from_pixbuf(loader.get_pixbuf())
+
+
+def control_mark(image, name, color, active=False, size=18):
+    svg = toolbar_icon(name, color, active)
+    if getattr(image, "control_svg", None) == (svg, size):
+        return
+    loader = GdkPixbuf.PixbufLoader.new_with_type("svg")
+    loader.set_size(size, size)
+    loader.write(svg);loader.close()
+    image.set_from_pixbuf(loader.get_pixbuf())
+    image.control_svg = svg, size
 
 
 def notice_content():
@@ -279,6 +306,78 @@ class RoutingNotice(Gtk.Window):
             update_notice(self.task, self.models, self.current, light=light)
 
 
+class CacheDetails(Gtk.Box):
+    """A two-part graph of the last input, with no unrelated output metrics."""
+    def __init__(self, owner):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.owner, self.data = owner, {"known": False}
+        self.number = label("", "cache-number")
+        self.age = label("", "muted")
+        self.age.set_halign(Gtk.Align.END)
+        self.hero = row(self.number, self.age, spacing=8)
+        self.bar = Gtk.DrawingArea()
+        self.bar.set_size_request(-1, 8)
+        self.bar.connect("draw", self._draw)
+        self.cached, self.other = label("", "muted"), label("", "muted")
+        self.other.set_halign(Gtk.Align.END)
+        def legend_item(text, role):
+            dot = Gtk.DrawingArea()
+            dot.set_size_request(5, 5);dot.set_valign(Gtk.Align.CENTER)
+            def draw(widget, cr):
+                colors = THEMES.get(self.owner.settings.get("theme"), THEMES["dark"])
+                rgb = [int(colors[role][i:i+2],16)/255 for i in (1,3,5)]
+                cr.set_source_rgb(*rgb);cr.arc(2.5,2.5,2.5,0,6.2831853072);cr.fill()
+            dot.connect("draw", draw)
+            group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            group.pack_start(dot,False,False,0);group.pack_start(text,False,False,0)
+            return group
+        self.legend = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.legend.pack_start(legend_item(self.cached,"accent"),False,False,0)
+        self.legend.pack_end(legend_item(self.other,"muted"),False,False,0)
+        self.empty = label("입력 기록을 기다리고 있어요.", "muted")
+        self.parts = (self.hero, self.bar, self.legend)
+        for widget in (*self.parts, self.empty):
+            self.pack_start(widget, False, False, 0)
+        self.show_all()
+
+    def update_data(self, usage, available=True):
+        self.data = cache_breakdown(usage, available)
+        for widget in self.parts:
+            widget.set_visible(self.data["known"])
+        self.empty.set_visible(not self.data["known"])
+        if self.data["known"]:
+            self.number.set_text(self.data["percent"])
+            self.age.set_text(self.data["age"])
+            self.cached.set_text(f"적중 {self.data['cached']:,}")
+            self.other.set_text(f"미적중 {self.data['other']:,}")
+            self.cached.set_tooltip_text(f"캐시에서 읽은 입력 {self.data['cached']:,} 토큰")
+            self.other.set_tooltip_text(f"캐시에서 읽지 않은 입력 {self.data['other']:,} 토큰")
+            self.get_accessible().set_name(f"입력 토큰 {self.data['total']:,}개 중 {self.data['percent']} 재사용")
+        else:
+            self.empty.set_text(self.data["message"])
+        self.bar.queue_draw()
+
+    def _draw(self, widget, cr):
+        if not self.data["known"]:
+            return False
+        width, height = widget.get_allocated_width(), widget.get_allocated_height()
+        radius = height/2
+        cr.arc(radius, radius, radius, 1.5707963268, 4.7123889804)
+        cr.arc(width-radius, radius, radius, 4.7123889804, 7.8539816340)
+        cr.close_path();cr.clip()
+        colors = THEMES.get(self.owner.settings.get("theme"), THEMES["dark"])
+        rgb = [int(colors["edge"][i:i+2],16)/255 for i in (1,3,5)]
+        cr.set_source_rgb(*rgb);cr.paint()
+        import cairo
+        filled = width*self.data["fraction"]
+        gradient = cairo.LinearGradient(0,0,max(filled,1),0)
+        for stop, role in ((0,"accent_start"),(1,"accent_end")):
+            rgb = [int(colors[role][i:i+2],16)/255 for i in (1,3,5)]
+            gradient.add_color_stop_rgb(stop,*rgb)
+        cr.set_source(gradient);cr.rectangle(0,0,filled,height);cr.fill()
+        return False
+
+
 class Panel(Gtk.Window):
     def __init__(self, settings):
         super().__init__(type=Gtk.WindowType.TOPLEVEL)
@@ -312,49 +411,40 @@ class Panel(Gtk.Window):
         Gtk.StyleContext.add_provider_for_screen(self.get_screen(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         card.set_name("routing-card")
-        card.set_size_request(288, -1)
-        self.set_default_size(288, 1)
+        card.set_size_request(CARD_WIDTH, -1)
+        self.set_default_size(CARD_WIDTH, 1)
         self.add(card)
 
-        def leading(caption, style="muted", icon=None, caption_width=54):
-            # The same 16px icon slot + 54px label column is used on every row.
-            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-            slot = Gtk.Box()
-            slot.set_size_request(16, -1)
-            if icon is not None:
-                slot.set_halign(Gtk.Align.START)
-                slot.pack_start(icon, True, True, 0)
-            box.pack_start(slot, False, False, 0)
-            caption.set_size_request(caption_width, -1)
-            caption.set_max_width_chars(1)
-            caption.get_style_context().add_class(style)
-            if style == "chip":
-                hover = Gtk.EventBox()
-                hover.set_visible_window(False)
-                hover.add(caption)
-                hover.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK)
-                hover.connect("enter-notify-event", lambda w, e: self._title_hover(w, True, e))
-                hover.connect("leave-notify-event", lambda w, e: self._title_hover(w, False, e))
-                self.reveal_labels[hover] = caption
-                box.pack_start(hover, False, False, 0)
-            else:
-                box.pack_start(caption, False, False, 0)
-            return box
-
-        def table_rows(values):
-            grid = Gtk.Grid(column_spacing=6, row_spacing=3)
-            grid.set_hexpand(True)
-            for index, (name, value) in enumerate(values):
-                value.caption_label = label(name)
-                caption = leading(value.caption_label)
-                caption.set_valign(Gtk.Align.BASELINE)
-                value.set_valign(Gtk.Align.BASELINE)
-                value.set_hexpand(True)
-                value.set_max_width_chars(1)
-                grid.set_row_baseline_position(index, Gtk.BaselinePosition.CENTER)
-                grid.attach(caption, 0, index, 1, 1)
-                grid.attach(value, 1, index, 1, 1)
-            return grid
+        self.detail_controls = []
+        self.detail_control = None
+        self.provider_context = {}
+        self.chevrons = []
+        self.theme_button = Gtk.Button()
+        self.theme_button.get_style_context().add_class("toolbar-control")
+        self.theme_button.set_size_request(CONTROL_HEIGHT, CONTROL_HEIGHT)
+        self.theme_image = Gtk.Image()
+        self.theme_button.add(self.theme_image)
+        self.theme_button.connect("clicked", lambda *_: self.toggle_theme())
+        self.app_name = label("Pawline", "muted")
+        source_drag = Gtk.EventBox()
+        source_drag.set_margin_start(CONTENT_INSET)
+        source_drag.set_visible_window(False)
+        source_drag.add(self.app_name)
+        source_drag.connect("button-press-event", self._drag)
+        self.pin_toggle = Gtk.ToggleButton()
+        self.pin_image = Gtk.Image()
+        self.pin_toggle.add(self.pin_image)
+        self.pin_toggle.get_style_context().add_class("pin-toggle")
+        self.pin_toggle.set_size_request(CONTROL_HEIGHT, CONTROL_HEIGHT)
+        self.pin_toggle.get_accessible().set_name("창 고정")
+        self.pin_toggle.connect("clicked", lambda *_: self.toggle_pin() if not getattr(self, "_syncing_pin", False) else None)
+        toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        toolbar.set_size_request(-1, CONTROL_HEIGHT)
+        toolbar.set_margin_bottom(6)
+        toolbar.pack_start(source_drag, True, True, 0)
+        toolbar.pack_end(self.theme_button, False, False, 0)
+        toolbar.pack_end(self.pin_toggle, False, False, 0)
+        card.pack_start(toolbar, False, False, 0)
 
         def state_dot():
             dot = Gtk.DrawingArea()
@@ -370,107 +460,132 @@ class Panel(Gtk.Window):
             dot.connect("draw", draw)
             return dot
 
-        self.gpt_mark, self.claude_mark = Gtk.Image(), Gtk.Image()
-        self.gpt_mark.get_accessible().set_name("OpenAI")
-        self.claude_mark.get_accessible().set_name("Anthropic")
-        # The control begins 8px before the shared text column; its padding
-        # brings the title back into alignment with model and usage values.
-        self.gpt_brand = leading(label("GPT"), "provider-openai", self.gpt_mark, caption_width=46)
-        self.claude_brand = leading(label("Claude"), "provider-anthropic", self.claude_mark, caption_width=46)
-        gpt_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
-        card.pack_start(gpt_section, False, False, 0)
-        self.session_button = Gtk.ToggleButton()
-        self.session_button.get_style_context().add_class("session-selector")
-        self.session_button.get_accessible().set_name("표시할 Codex 작업 선택")
-        self.session_button.connect("enter-notify-event", lambda b, e: self._title_hover(b, True, e))
-        self.session_button.connect("leave-notify-event", lambda b, e: self._title_hover(b, False, e))
-        self.session_title = label("작업 선택", "task-title")
-        self.session_title.set_max_width_chars(1)
-        arrow = Gtk.Image.new_from_icon_name("pan-down-symbolic", Gtk.IconSize.MENU)
-        arrow.set_pixel_size(10)
-        self.session_button.add(row(self.session_title, arrow, spacing=4))
-        self.session_menu = MenuWindow(self)
-        self.session_menu.items.set_size_request(250, -1)
-        source_drag = Gtk.EventBox()
-        source_drag.set_visible_window(False)
-        source_drag.add(self.gpt_brand)
-        source_drag.connect("button-press-event", self._drag)
-        self.menu_button = Gtk.ToggleButton(label="⋯")
-        self.menu_button.get_style_context().add_class("panel-menu")
-        self.menu_button.set_tooltip_text("정보창 테마와 고정")
-        self.menu_button.get_accessible().set_name("라우팅 모니터 메뉴")
-        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        header.pack_start(source_drag, False, False, 0)
-        header.pack_start(self.session_button, True, True, 0)
-        header.pack_start(self.menu_button, False, False, 0)
-        gpt_section.pack_start(header, False, False, 0)
-        self.requested, self.served = label("—", "model"), label("—", "model")
-        gpt_section.pack_start(table_rows((("요청", self.requested), ("응답", self.served))), False, False, 0)
-        self.chip, self.cache = label("대기", "chip"), label("", "muted")
-        self.gpt_dot = state_dot()
-        self.chip.status_marker = self.gpt_dot
-        self.cache.set_max_width_chars(1)
-        footer = row(leading(self.chip, "chip", self.gpt_dot), self.cache, spacing=6)
-        footer.set_child_packing(footer.get_children()[0], False, False, 0, Gtk.PackType.START)
-        footer.set_child_packing(self.cache, True, True, 0, Gtk.PackType.START)
-        gpt_section.pack_start(footer, False, False, 0)
+        def section(provider):
+            name = "GPT" if provider == "gpt" else "Claude"
+            section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            header.set_margin_start(CONTENT_INSET)
+            header.set_margin_end(CONTENT_INSET)
+            header.set_size_request(-1, ROW_HEIGHT)
+            mark = Gtk.Image()
+            mark.get_accessible().set_name("OpenAI" if provider == "gpt" else "Anthropic")
+            brand = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            brand.pack_start(mark, False, False, 0)
+            brand.pack_start(label(name, "provider-openai" if provider == "gpt" else "provider-anthropic"), True, True, 0)
+            brand.set_size_request(68, -1)
+            mode = label("자동 추적", "muted")
+            progress = label("작업 없음", "chip")
+            progress.set_halign(Gtk.Align.END)
+            self.provider_context[provider] = (mode, progress)
+            header.pack_start(brand, False, False, 0)
+            header.pack_start(mode, False, False, 0)
+            header.pack_end(progress, True, True, 0)
+            section.pack_start(header, False, False, 0)
+            button = Gtk.ToggleButton()
+            button.get_style_context().add_class("session-selector")
+            button.get_accessible().set_name("표시할 "+name+" 작업 선택")
+            title = label("작업 선택", "task-title")
+            title.set_max_width_chars(1)
+            arrow = Gtk.Image()
+            self.chevrons.append((arrow, "chevron-down"))
+            button.add(row(title, arrow, spacing=4))
+            button.connect("enter-notify-event", lambda w, e: self._title_hover(w, True, e))
+            button.connect("leave-notify-event", lambda w, e: self._title_hover(w, False, e))
+            menu = MenuWindow(self)
+            menu.items.set_size_request(276, -1)
+            button.connect("toggled", lambda w: self._toggle_menu(w, menu))
+            menu.connect("hide", lambda *_: self._menu_closed(button))
+            section.pack_start(button, False, False, 0)
+            requested, served = label("—", "requested"), label("—", "model")
+            grid = Gtk.Grid(column_spacing=FIELD_GAP, row_spacing=4)
+            grid.set_margin_start(CONTENT_INSET)
+            for index, (caption, value) in enumerate((("응답 모델", served), ("요청" if provider == "gpt" else "설정", requested))):
+                height = CONTROL_HEIGHT if index == 0 else ROW_HEIGHT
+                value.caption_label = label(caption, "muted")
+                value.caption_label.set_size_request(FIELD_WIDTH, height)
+                value.caption_label.set_max_width_chars(1)
+                value.set_size_request(-1, height)
+                value.set_hexpand(True)
+                value.set_max_width_chars(1)
+                grid.attach(value.caption_label, 0, index, 1, 1)
+                grid.attach(value, 1, index, 1 if index == 0 else 2, 1)
+                if value is requested:
+                    # The request remains available in the model detail, without
+                    # repeating the same model in the compact overview.
+                    value.set_no_show_all(True)
+                    value.caption_label.set_no_show_all(True)
+            status = label("대기", "chip")
+            dot = state_dot()
+            status.status_marker = dot
+            status_button = Gtk.ToggleButton()
+            status_button.get_style_context().add_class("status-control")
+            status_button.set_size_request(STATUS_WIDTH, CONTROL_HEIGHT)
+            status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+            status_box.pack_start(dot, False, False, 0)
+            status_box.pack_start(status, True, True, 0)
+            status_arrow = Gtk.Image()
+            self.chevrons.append((status_arrow, "chevron-right"))
+            status_box.pack_end(status_arrow, False, False, 0)
+            status_button.add(status_box)
+            grid.attach(status_button, 2, 0, 1, 1)
+            section.pack_start(grid, False, False, 0)
+            cache = label("", "muted")
+            cache.set_size_request(FIELD_WIDTH, -1)
+            cache.set_max_width_chars(1)
+            cache.metric = label("", "cache-value")
+            cache.age = label("", "muted")
+            cache_button = Gtk.ToggleButton()
+            cache_button.get_style_context().add_class("cache-control")
+            cache_button.set_size_request(-1, CONTROL_HEIGHT)
+            cache_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=FIELD_GAP)
+            cache_row.pack_start(cache, False, False, 0)
+            cache_row.pack_start(cache.metric, False, False, 0)
+            cache.age.set_halign(Gtk.Align.END)
+            cache_row.pack_start(cache.age, True, True, 0)
+            cache_arrow = Gtk.Image()
+            self.chevrons.append((cache_arrow, "chevron-right"))
+            cache_row.pack_end(cache_arrow, False, False, 0)
+            cache_button.add(cache_row)
+            section.pack_start(cache_button, False, False, 0)
+            for control, text, heading in ((status_button, status, "모델 관측"), (cache_button, cache, "캐시 적중률")):
+                control.get_accessible().set_name(name+" "+heading+" 상세")
+                control.detail_title, control.detail_source = name+" · "+heading, text
+                control.detail_kind = "cache" if control is cache_button else "model"
+                text.detail_button = control
+                control.connect("toggled", self._detail_toggled)
+                self.detail_controls.append(control)
+            card.pack_start(section, False, False, 0)
+            return mark, brand, button, title, menu, requested, served, grid, status, dot, cache, status_button, cache_button
+
+        (self.gpt_mark, self.gpt_brand, self.session_button, self.session_title, self.session_menu,
+         self.requested, self.served, self.gpt_models, self.chip, self.gpt_dot, self.cache,
+         self.gpt_status_button, self.gpt_cache_button) = section("gpt")
         self.history = label("", "muted")
-        gpt_section.pack_start(self.history, False, False, 0)
         card.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 0)
-        claude_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
-        card.pack_start(claude_section, False, False, 0)
-        self.claude = label("로그 연결 전", "chip")
-        self.claude_button = Gtk.ToggleButton()
-        self.claude_button.get_style_context().add_class("session-selector")
-        self.claude_title = label("작업 선택", "task-title")
-        self.claude_title.set_max_width_chars(1)
-        arrow = Gtk.Image.new_from_icon_name("pan-down-symbolic", Gtk.IconSize.MENU)
-        arrow.set_pixel_size(10)
-        self.claude_button.add(row(self.claude_title, arrow, spacing=4))
-        self.claude_button.get_accessible().set_name("표시할 Claude 작업 선택")
-        self.claude_button.connect("enter-notify-event", lambda b, e: self._title_hover(b, True, e))
-        self.claude_button.connect("leave-notify-event", lambda b, e: self._title_hover(b, False, e))
-        self.claude_menu = MenuWindow(self)
-        self.claude_menu.items.set_size_request(250, -1)
-        self.claude_button.connect("toggled", lambda b: self._toggle_menu(b, self.claude_menu))
-        self.claude_menu.connect("hide", lambda *_: self._menu_closed(self.claude_button))
-        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        header.pack_start(self.claude_brand, False, False, 0)
-        header.pack_start(self.claude_button, True, True, 0)
-        spacer = Gtk.Box()
-        spacer.set_size_request(24, -1)
-        self.header_action_sizes = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL)
-        self.header_action_sizes.add_widget(self.menu_button)
-        self.header_action_sizes.add_widget(spacer)
-        header.pack_start(spacer, False, False, 0)
-        claude_section.pack_start(header, False, False, 0)
-        self.claude_requested, self.claude_served = label("—", "model"), label("—", "model")
-        self.claude_models = table_rows((("설정", self.claude_requested), ("응답", self.claude_served)))
-        claude_section.pack_start(self.claude_models, False, False, 0)
-        self.claude_cache = label("", "muted")
-        self.claude_cache.set_max_width_chars(1)
-        self.claude_dot = state_dot()
-        self.claude.status_marker = self.claude_dot
-        footer = row(leading(self.claude, "chip", self.claude_dot), self.claude_cache, spacing=6)
-        footer.set_child_packing(footer.get_children()[0], False, False, 0, Gtk.PackType.START)
-        footer.set_child_packing(self.claude_cache, True, True, 0, Gtk.PackType.START)
-        claude_section.pack_start(footer, False, False, 0)
-        self.action_menu = MenuWindow(self)
-        self.action_menu.items.set_size_request(182, -1)
-        callbacks = {"theme": self.toggle_theme,
-                     "pin": lambda: (self.toggle_pin(), self.close_menu())}
-        buttons = {}
-        for key, title in menu_actions("panel", theme=self.settings.get("theme", "dark"), pinned=self.pinned):
-            button = menu_action(title)
-            button.connect("clicked", lambda _, callback=callbacks[key]: callback())
-            self.action_menu.append(button)
-            buttons[key] = button
-        self.theme_button, self.pin_button = buttons["theme"], buttons["pin"]
-        self.action_menu.items.show_all()
+        (self.claude_mark, self.claude_brand, self.claude_button, self.claude_title, self.claude_menu,
+         self.claude_requested, self.claude_served, self.claude_models, self.claude, self.claude_dot,
+         self.claude_cache, self.claude_status_button, self.claude_cache_button) = section("claude")
+        self.detail_menu = MenuWindow(self)
+        self.detail_menu.set_title("Pawline · 상세 정보")
+        self.detail_menu.items.get_style_context().add_class("detail-menu")
+        self.detail_menu.items.set_size_request(CARD_WIDTH, -1)
+        self.detail_title = Gtk.Label(xalign=0)
+        self.detail_title.get_style_context().add_class("detail-heading")
+        self.detail_body = Gtk.Label(xalign=0, yalign=0)
+        self.detail_body.set_line_wrap(True)
+        self.detail_body.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+        self.detail_body.set_max_width_chars(42)
+        self.detail_body.get_style_context().add_class("muted")
+        self.detail_body.set_no_show_all(True)
+        self.cache_detail = CacheDetails(self)
+        self.cache_detail.set_no_show_all(True)
+        self.cache_detail.hide()
+        self.detail_menu.append(self.detail_title)
+        self.detail_menu.append(self.detail_body)
+        self.detail_menu.append(self.cache_detail)
+        self.detail_menu.connect("hide", self._detail_closed)
         self.title_reveal = TitleReveal(self, self._schedule_title_reveal)
         self.connect("hide", lambda *_: self.title_reveal.hide())
-        self.session_button.connect("toggled", lambda b: self._toggle_menu(b, self.session_menu))
-        self.menu_button.connect("toggled", lambda b: self._toggle_menu(b, self.action_menu, True))
         self.apply_theme()
         self.connect("delete-event", lambda *_: self.pet.quit() if self.pet else False)
         self.connect("button-release-event", self._save_position)
@@ -478,10 +593,40 @@ class Panel(Gtk.Window):
         self.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK)
         self.connect("enter-notify-event", lambda _, e: self.crossing("panel", True, e))
         self.connect("leave-notify-event", lambda _, e: self.crossing("panel", False, e))
-        self.action_menu.connect("hide", lambda *_: self._menu_closed(self.menu_button))
-        self.session_menu.connect("hide", lambda *_: self._menu_closed(self.session_button))
         self.show_all()
         self.hide()
+
+    def _menus(self):
+        return self.session_menu, self.claude_menu, self.detail_menu
+
+    def _detail_toggled(self, button):
+        if button.get_active():
+            previous = self.detail_control
+            self.detail_control = button
+            if previous is not None and previous is not button:
+                previous.set_active(False)
+            self.detail_title.set_text(button.detail_title)
+            self._update_details(button)
+            self._toggle_menu(button, self.detail_menu)
+        elif self.detail_control is button:
+            self.detail_menu.popdown()
+
+    def _update_details(self, button):
+        source = button.detail_source
+        cache = button.detail_kind == "cache"
+        self.detail_body.set_visible(not cache)
+        self.cache_detail.set_visible(cache)
+        if cache:
+            self.cache_detail.update_data(getattr(source, "cache_record", None),
+                                          getattr(source, "cache_available", True))
+        else:
+            self.detail_body.set_text(source.get_tooltip_text() or "새 기록을 기다립니다.")
+
+    def _detail_closed(self, *_):
+        button, self.detail_control = self.detail_control, None
+        if button is not None:
+            button.set_active(False)
+        self.schedule_hide()
 
     def _toggle_menu(self, button, menu, align_right=False):
         if button.get_active():
@@ -489,7 +634,7 @@ class Panel(Gtk.Window):
             pet_menu = getattr(self.pet, "local_menu", None)
             if pet_menu:
                 pet_menu.popdown()
-            for other in (self.action_menu, self.session_menu, self.claude_menu):
+            for other in self._menus():
                 if other is not menu:
                     other.popdown()
             menu.popup(button, align_right=align_right, within_owner=True,
@@ -516,7 +661,7 @@ class Panel(Gtk.Window):
         if not self.get_visible():
             self.title_reveal.hide()
             return False
-        if any(b.get_active() for b in (self.session_button, self.claude_button)):
+        if any(m.get_visible() for m in self._menus()):
             self.title_reveal.hide()
             return False
         button = next(iter(self.title_hovered), None)
@@ -562,7 +707,7 @@ class Panel(Gtk.Window):
 
     def reveal(self):
         self._cancel_timer("hide_timer")
-        self.resize(288, 1)
+        self.resize(CARD_WIDTH, 1)
         self.show()
         if self.pet:
             self.place_near(self.pet, restore=False)
@@ -575,27 +720,42 @@ class Panel(Gtk.Window):
 
     def _hide_after_leave(self):
         self.hide_timer = None
-        if not self.pinned and not self.hovered and not any(b.get_active() for b in (self.menu_button, self.session_button, self.claude_button)):
+        if not self.pinned and not self.hovered and not any(m.get_visible() for m in self._menus()):
             self.hide()
         return False
 
     def toggle_pin(self):
         self.pinned = not self.pinned
-        self.pin_button.set_label("정보창 고정 해제" if self.pinned else "정보창 고정")
-        self.menu_button.set_tooltip_text("정보창 고정됨 · 다시 펫을 클릭하면 해제" if self.pinned else "정보창 테마와 고정")
+        self._sync_pin()
         if self.pinned:
             self.reveal()
         else:
             self.schedule_hide()
 
+    def _sync_pin(self):
+        self._syncing_pin = True
+        self.pin_toggle.set_active(self.pinned)
+        colors = THEMES.get(self.settings.get("theme"), THEMES["dark"])
+        control_mark(self.pin_image, "pin", colors["foreground"] if self.pinned else colors["muted"], self.pinned)
+        self.pin_toggle.set_tooltip_text("창 고정 해제" if self.pinned else "창 고정")
+        self.pin_toggle.get_accessible().set_description("고정됨" if self.pinned else "고정되지 않음")
+        self._syncing_pin = False
+
     def apply_theme(self):
         light = self.settings.get("theme") == "light"
         context = self.get_style_context()
         context.add_class("light") if light else context.remove_class("light")
-        for menu in (self.action_menu, self.session_menu, self.claude_menu):
+        for menu in self._menus():
             popup = menu.items.get_style_context()
             popup.add_class("light") if light else popup.remove_class("light")
-        self.theme_button.set_label("어두운 화면" if light else "밝은 화면")
+        colors = THEMES["light" if light else "dark"]
+        action = "어두운 화면으로 전환" if light else "밝은 화면으로 전환"
+        control_mark(self.theme_image, "moon" if light else "sun", colors["muted"])
+        for image, name in self.chevrons:
+            control_mark(image, name, colors["muted"], size=12)
+        self.theme_button.set_tooltip_text(action)
+        self.theme_button.get_accessible().set_name(action)
+        self._sync_pin()
         provider_mark(self.gpt_mark, "openai", light)
         provider_mark(self.claude_mark, "anthropic", light)
 
@@ -603,11 +763,11 @@ class Panel(Gtk.Window):
         self.settings["theme"] = "dark" if self.settings.get("theme") == "light" else "light"
         self.apply_theme()
         self._save_position()
-        self.close_menu()
-
-    def close_menu(self):
-        self.action_menu.popdown()
-        self.menu_button.set_active(False)
+        for menu in self._menus():
+            menu.popdown()
+        pet_menu = getattr(self.pet, "local_menu", None)
+        if pet_menu:
+            pet_menu.popdown()
 
     def select_session(self, thread_id):
         if thread_id:
@@ -665,7 +825,7 @@ class Panel(Gtk.Window):
     def _align_after_resize(self, *_):
         if self.pet and self.get_visible():
             self.place_near(self.pet, restore=False)
-        for menu in (self.action_menu, self.session_menu, self.claude_menu):
+        for menu in self._menus():
             if menu.get_visible():
                 menu._place()
 
@@ -698,19 +858,36 @@ class Panel(Gtk.Window):
 
     @staticmethod
     def update_usage(widget, usage, available=True):
-        text, details = usage_text(usage, available)
+        widget.cache_record, widget.cache_available = usage, available
+        text, metric, age, details = usage_parts(usage, available)
         widget.set_text(text)
+        widget.metric.set_text(metric)
+        widget.age.set_text(age)
         widget.set_tooltip_text(details)
         widget.get_accessible().set_description(details)
+        widget.set_has_tooltip(False)
+        if hasattr(widget, "detail_button"):
+            widget.detail_button.get_accessible().set_description(details)
+
+    def update_provider_context(self, provider, value):
+        mode, progress = self.provider_context[provider]
+        selected = self.settings.get("codex_thread" if provider == "gpt" else "claude_session")
+        mode.set_text(selection_text(selected))
+        mode.set_tooltip_text("메뉴에서 고른 작업을 표시합니다." if selected else "최근 활동이 있는 작업을 자동으로 표시합니다.")
+        self._chip(progress, *progress_status(provider, value))
+        progress.set_tooltip_text("작업의 진행 상태입니다. 응답 모델 확인 여부는 아래에 따로 표시합니다.")
 
     def update(self, route, claude):
+        self._sync_pin()
+        self.update_provider_context("gpt", route)
+        self.update_provider_context("claude", claude)
         self.update_sessions(route)
         self.update_claude_sessions(claude)
         self.update_usage(self.cache, route.get("usage"), route.get("metrics_available", False))
-        self.cache.set_visible("metrics_available" in route)
+        self.cache.set_visible(True)
         children = route.get("children") or {}
         children_detail = "\n".join(f"{item['name']} · {item['state']}" for item in children.get("details", []))
-        self.claude_models.set_visible(bool(claude.get("session_id")))
+        self.claude_models.set_visible(True)
         request = model_text(claude.get("requested_model")) or "확인 안 됨"
         if claude.get("requested_effort"):
             request += " · " + claude["requested_effort"]
@@ -718,25 +895,16 @@ class Panel(Gtk.Window):
         self.claude_requested.set_tooltip_text("현재 CLI의 시작 모델·추론 설정입니다. 실행 중 설정을 바꾸면 실제 응답 로그의 모델과 다를 수 있습니다.")
         self.claude_served.set_text(model_text(claude.get("served")) or "기록 대기")
         self.claude_served.set_tooltip_text("Claude의 응답 로그에 기록된 모델명입니다.")
-        self.claude_title.set_text(claude.get("title") or "작업 선택")
+        self.claude_title.set_text(claude.get("title") or "현재 작업 없음")
         self.claude_button.get_accessible().set_description(claude.get("title") or "현재 작업 없음")
         self.update_usage(self.claude_cache, claude.get("usage"))
         verdict = route.get("verdict")
-        text, tone = route_status(route)
         at = route.get("observed_at")
-        if verdict == "PENDING":
-            text = "응답 중" if route.get("status") == "in_progress" else "응답 대기"
-            if at:
-                text += " · " + elapsed_text(route.get("request_started_at") or at)
-        elif verdict in ("ok", "OK", "REROUTED", "ERROR") and at:
-            text += " · " + age_text(at)
-        self._chip(self.chip, text.split(" · ", 1)[0], tone)
-        self.chip.set_tooltip_text("서버 응답이 진행 중입니다. 완료되면 모델명 일치 여부를 표시합니다."
-                                  if verdict == "PENDING" else "서버 응답의 모델명 " + text)
-        if verdict == "OBSERVATION_GAP" or route.get("observation_disabled") or route.get("capture_lost"):
-            self.chip.set_tooltip_text(route.get("detail"))
-        if children.get("running"):
-            self.chip.set_tooltip_text(self.chip.get_tooltip_text() + "\n" + children_detail)
+        text, tone, detail = observation_status("gpt", route)
+        self._chip(self.chip, text, tone)
+        if route.get("historical_mismatches"):
+            detail += f"\n관측된 모델명 불일치: {route['historical_mismatches']}건"
+        self.chip.set_tooltip_text(detail)
         caption, model, effort, request_detail = gpt_request(route)
         self.requested.caption_label.set_text(caption)
         requested = model_text(model) or "—"
@@ -753,19 +921,18 @@ class Panel(Gtk.Window):
         timing = ("모델 정보 수신: " + stamp + " · " + age_text(at)) if at else "모델 정보 수신 전"
         timing += "\n연결 확인: " + age_text(route.get("updated_at"))
         self.gpt_brand.set_tooltip_text("OpenAI · " + source_text + "\n" + coverage + "\n" + timing)
-        mismatches = route.get("historical_mismatches", 0)
-        self.history.set_text(f"이 연결에서 모델명 불일치 {mismatches}건" if mismatches else "")
-        history_changed = self.history.get_visible() != bool(mismatches)
-        self.history.set_visible(bool(mismatches))
-        if history_changed:
-            self.resize(288, 1)
-        activity_text = claude["label"] + " · " + age_text(claude.get("observed_at"))
-        self._chip(self.claude, claude["label"], "blue" if claude["state"] == "running" else "neutral")
-        self.claude.set_tooltip_text("Claude 로컬 로그 · " + activity_text)
+        text, tone, detail = observation_status("claude", claude)
+        self._chip(self.claude, text, tone)
+        self.claude.set_tooltip_text(detail)
         self.claude_brand.set_tooltip_text("Anthropic · Claude Code\n" + self.claude_requested.get_tooltip_text())
         for status in (self.chip, self.claude):
             status.get_accessible().set_description(status.get_tooltip_text() or status.get_text())
             status.set_has_tooltip(False)
+            status.detail_button.get_accessible().set_description(status.get_tooltip_text() or status.get_text())
+        if self.detail_menu.get_visible() and self.detail_control is not None:
+            self._update_details(self.detail_control)
+            self.detail_menu.resize(1, 1)
+            self.detail_menu._place()
         if self.title_reveal.get_visible():
             source = self.reveal_labels.get(self.title_reveal.anchor)
             if source is not None:
@@ -826,7 +993,7 @@ class Fluff(Overlay):
         if previous:
             previous.destroy()
         self._halt_walk()
-        for other in (self.panel.action_menu, self.panel.session_menu, self.panel.claude_menu):
+        for other in self.panel._menus():
             other.popdown()
         menu = MenuWindow(self)
         menu.items.set_size_request(164, -1)
