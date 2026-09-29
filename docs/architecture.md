@@ -45,9 +45,13 @@ Register the native CLI with `--fluff-configure-cli PATH` and set
 Browser/config helpers delegate to the native CLI without starting an observer.
 The native policy checks run normally; no policy setting is weakened or replaced.
 
-Only the pet and collector can be reloaded independently. Replacing the
-desktop adapter requires the **next normal Codex app launch**. Never terminate
-its app-server while work is running just to refresh this display.
+The pet, native-usage collector and response worker can be reloaded independently.
+`--fluff-reload-observer` replaces only the response worker.
+`--fluff-update-observer PACKAGE.zip` installs an explicit worker-code package
+and reloads it. The stable relay, native CLI and TLS sockets remain running.
+Migrating a pre-0.2.8 adapter or changing relay/TLS/embedded-runtime code still
+requires the next normal Codex app launch. Never terminate an active app-server
+just to refresh this display.
 
 On another Linux machine, use its own Python 3.10+, GTK3/PyGObject/cairo and
 virtualenv, install `requirements.lock`, and supply a trusted local sprite pack
@@ -138,6 +142,21 @@ provider calls are required.
 
 ### Observation boundary
 
+`observer_host.py` owns a bounded pipe bridge and a worker watchdog.
+`observer_worker.py` loads the replaceable `observation.py` reducer; it never
+owns the native CLI or relay sockets. A blocked pipe kills only that worker.
+Normal replacement drains accepted metadata, pauses the old worker, transfers
+a bounded JSON checkpoint in memory, and resumes the same request identities
+in a new worker. Raw prompts and outputs never enter the checkpoint.
+Unexpected worker loss quarantines old connection IDs instead of guessing
+which request a later response belongs to.
+
+The worker runs from an immutable copy of an explicitly installed source ZIP.
+No running EXE needs replacing for a worker update. An invalid package is
+rejected before handoff; startup failure restores the previous package/state.
+The control file carries an exact host instance ID, not a bare reusable PID.
+These processes isolate faults; they are not a sandbox for untrusted code.
+
 Socket callbacks enqueue into a bounded inbox (512 events and at most 16 MiB
 of retained UTF-8 buffers and message overhead). One worker aggregates metadata and publishes
 at one-second intervals. Filesystem IO does not run in a relay callback.
@@ -198,3 +217,5 @@ dependencies in `requirements.lock`. No global Python packages are modified.
   and [Claude prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching):
   input-token and retention semantics. API policy is not direct evidence of
   native app cache residency.
+
+Process and packaging references: [Python subprocess](https://docs.python.org/3/library/subprocess.html) and [PyInstaller subprocess handling](https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#launching-external-programs-from-the-frozen-application). Private pipes avoid a new listening control port; the watchdog prevents a blocked worker pipe from blocking a relay callback.
