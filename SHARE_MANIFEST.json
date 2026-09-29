@@ -1,7 +1,7 @@
 {
   "name": "Pawline",
-  "version": "0.2.8",
-  "packaging_revision": "public-source-20260929-observer-process",
+  "version": "0.2.9",
+  "packaging_revision": "public-source-20260929-ui-consistency",
   "files": [
     {
       "path": ".github/workflows/check.yml",
@@ -25,12 +25,12 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "433d7362ad86d0aa5111b560da8be41fc89c12d9fc308d09f8d5e9d0a705b093",
-      "bytes": 8057
+      "sha256": "78021009fc2566576f7c1677e990a70fe7ed5b6857eadc58d8b18b96de55286d",
+      "bytes": 9027
     },
     {
       "path": "INSTALL.md",
-      "sha256": "0b5f1359b5de24ab27fdb4244d652cf73876422b41dc701d73b9a2c84c50d06b",
+      "sha256": "c05e8967c3eb7d5c72fbe21d3dad52c217fb67e47b81ca6df8cd27975b63570b",
       "bytes": 3255
     },
     {
@@ -45,8 +45,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "0200c9f3dc95ef785a3260fd537672882f31834d8cf5ff83418b54d83840f900",
-      "bytes": 2431
+      "sha256": "8ee72ed8fd3faf57c541c6bdd42bb3160bb1df97d92041284201ac1f5f11d753",
+      "bytes": 2609
     },
     {
       "path": "SECURITY.md",
@@ -65,13 +65,13 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "df17bf70a8afd4c4043fefa3024efab99a51026ab081d0c5d61a900ef4eec190",
-      "bytes": 3805
+      "sha256": "050fdaf30b8c2c30a026b18c494cb3403493a24eaf65dd00bb5aa400008e8105",
+      "bytes": 2647
     },
     {
       "path": "WINDOWS.md",
-      "sha256": "00f3c1480d749acde66ac588f1d9b26892c13236e56471751d3d7074a74b4e50",
-      "bytes": 6178
+      "sha256": "404f1c056faa0bae9f2d7cb86aa97c7c3508d2470ff9d9e8e8c1631180e34e92",
+      "bytes": 6245
     },
     {
       "path": "assets/app/pawline.ico",
@@ -135,8 +135,8 @@
     },
     {
       "path": "assets/screenshots/overview.png",
-      "sha256": "8914ff5ad2854bc7c23e569d260d788e2d017803a1647cdf7100a4edc7af4f85",
-      "bytes": 70877
+      "sha256": "bc95e384bd17b5139dae8bbdd9ef45d356f91be6574896b6f4072a2ec96520ac",
+      "bytes": 45472
     },
     {
       "path": "assets/screenshots/panel-dark.png",
@@ -145,8 +145,8 @@
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "9fb2126bd7f3e5f36036472d1eeff8ed155a4b05722e57cc82b20c0052527fab",
-      "bytes": 12891
+      "sha256": "d74877aee509ad7ff64951a9814cfd8406848cbc47b9402404dacb90066d0cd7",
+      "bytes": 13213
     },
     {
       "path": "docs/snapshots.md",
@@ -154,9 +154,14 @@
       "bytes": 2143
     },
     {
+      "path": "docs/ui-design.md",
+      "sha256": "6b4018946a2192fd05caadb0c9d781163936aec51c0293c4316fd88ecb76b02d",
+      "bytes": 6680
+    },
+    {
       "path": "docs/usage.md",
-      "sha256": "ed76398a68d05cae0a8ded25b151e7a888ce43d2c2ffd5cfa26d734ea089fc74",
-      "bytes": 1706
+      "sha256": "e7144976b23c9010951c26f0410d6eebed6801b1fa6a5b317477137632f2e5d7",
+      "bytes": 1825
     },
     {
       "path": "fluff-monitor-activity.service",
@@ -165,7 +170,7 @@
     },
     {
       "path": "fluff_monitor/__init__.py",
-      "sha256": "326a40139af31dd5447362603c6a90df56a7320cea61bfc333978cd3ea75d675",
+      "sha256": "0c80ba815b47fa96ce3a44315ff75d1efc06a5af823a556f3c9b45ca0f581c52",
       "bytes": 74
     },
     {
@@ -205,8 +210,8 @@
     },
     {
       "path": "fluff_monitor/menu.py",
-      "sha256": "830a65258a05f5fa2acc976a8348ce3d563d862919e3e85f23cde3e8eaefd5dd",
-      "bytes": 17345
+      "sha256": "e4306510f7cff59ec24c9f8b0bee21eb9cd3f17ab733b80b7f78bdef59c478c6",
+      "bytes": 17691
     },
     {
       "path": "fluff_monitor/messages.py",
@@ -240,8 +245,8 @@
     },
     {
       "path": "fluff_monitor/pet.py",
-      "sha256": "880a82c1ecaa8358f247df99e37c32c044a99d69a7e822e8790c75b995740d7f",
-      "bytes": 48191
+      "sha256": "f3d3fd6f6fa941902d9c369e2d45905de48c5fb7954878983cd9646d38bdcfa4",
+      "bytes": 56620
     },
     {
       "path": "fluff_monitor/pet_state.py",
@@ -255,8 +260,8 @@
     },
     {
       "path": "fluff_monitor/presentation.py",
-      "sha256": "91b563d8d01fc0435bec1410c916da2f138dfbe355a793cdcb019ec0d3cd8cc5",
-      "bytes": 3840
+      "sha256": "f3708853d6a0b2f15af9dbacc286db8308d5f36b2ab957457d97656faf47b075",
+      "bytes": 11292
     },
     {
       "path": "fluff_monitor/proxy.py",
@@ -265,8 +270,8 @@
     },
     {
       "path": "fluff_monitor/qt_pet.py",
-      "sha256": "980061d21e07aa22f84c3a0c8bb38cc143e12fa21a1fd482bd8005ec92f64d83",
-      "bytes": 29138
+      "sha256": "5dc634e273a590b3ab8667868e2219f6d8aa49df91491d720edbebaa4d64aeb3",
+      "bytes": 43932
     },
     {
       "path": "fluff_monitor/records.py",
@@ -305,7 +310,7 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "d254943d7d8c619468018d60445ca97ab052da76d39c5a95342c42451ebe24e4",
+      "sha256": "727dc2ef9704dae01744edfdd16dae29a041e3f0782f147a836419eb41ff6508",
       "bytes": 505
     },
     {
@@ -369,6 +374,11 @@
       "bytes": 2625
     },
     {
+      "path": "tests/test_presentation.py",
+      "sha256": "9f3f0726c8b42bd2fc0bef93cb07748bd5129b1a249d8b876b983ba66c3fcc9b",
+      "bytes": 3278
+    },
+    {
       "path": "tests/test_security.py",
       "sha256": "b15aad96f89be93ec663d41c35aa2b9c2c3552d002b0c12a91966bbef81682f5",
       "bytes": 3400
@@ -390,13 +400,13 @@
     },
     {
       "path": "tests/verify_activity_ui.py",
-      "sha256": "d640718c42bf888ca5ce6842b3940f5bd8a5eb73f0a16093fd4c59674356203b",
-      "bytes": 22621
+      "sha256": "009b01ecba792b9470781287a47a38c18f23cc5f192b27a27eba3e49aa8f5dec",
+      "bytes": 27680
     },
     {
       "path": "tests/verify_qt_ui.py",
-      "sha256": "074e8893994e56ad3f4245e648bc97a34c5d8dc512a5f2a44def5bca082ba518",
-      "bytes": 9070
+      "sha256": "64ce123425dde9fdd73d215fff47e8656f9f89b69bc6dfc81455b3b99d38ca54",
+      "bytes": 14120
     },
     {
       "path": "tests/verify_windows_bundle.py",
@@ -565,7 +575,7 @@
     },
     {
       "path": "windows/pawline.iss",
-      "sha256": "5bd8d47c0f1cd24124231c1327863cd6f39e4f23491c1f66becc81108f469f08",
+      "sha256": "11c875d0485895451c942b23f2641f807544744da3d45e13b872926f36772cea",
       "bytes": 1148
     },
     {
@@ -580,7 +590,7 @@
     },
     {
       "path": "windows/verify-installer.ps1",
-      "sha256": "5f6f3a2d8353d02b1ee65eafe3b32a376f6471703bbf0b94be2a815d63b6da9e",
+      "sha256": "630640a9a9fa180d96547b3b92db6ffc5e1e346ea43cdf950ce4eeb6bd76f7c9",
       "bytes": 1632
     },
     {

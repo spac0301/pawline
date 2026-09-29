@@ -1,21 +1,21 @@
 # Windows에서 시작하기
 
-[Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.8)
+[Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.9)
 
 ## 실행 제한
 
-**0.2.8은 코드 서명이 없는 시험판입니다.** Smart App Control이 켜진 Windows 11에서 실행 전 차단된 사례가 확인됐습니다.
+**0.2.9는 코드 서명이 없는 시험판입니다.** 이전 0.2.8이 Smart App Control을 켠 Windows 11에서 차단된 사례가 있으며, 0.2.9도 이 정책을 통과한다고 확인된 배포본은 아닙니다.
 설치 EXE와 `pawline.exe`, `pawline-capture.exe` 모두 서명이 없습니다. Windows CI의 실행 검사 통과는 이 보안 정책의 통과를 의미하지 않습니다.
 다운로드 위치나 ZIP 형식을 바꿔도 서명은 생기지 않습니다.
 
 해결하려면 신뢰할 수 있는 인증서로 설치·실행·제거 파일과 포함된 실행 코드를 서명하고, Smart App Control을 켠 Windows 11에서 다시 검증해야 합니다.
-현재 공개된 0.2.8은 이 조건을 충족하지 않습니다. [Microsoft 서명 안내](https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/code-signing-for-smart-app-control)
+0.2.9는 이 서명·검증 조건을 충족하지 않습니다. [Microsoft 서명 안내](https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/code-signing-for-smart-app-control)
 
 Pawline은 다른 컴퓨터의 제어 권한을 요구하지 않습니다. 선택 기능인 응답 관측기는 같은 컴퓨터의 `127.0.0.1`에만 연결을 받습니다.
 
 ## 설치 파일로 실행
 
-`Pawline-Setup-0.2.8-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
+`Pawline-Setup-0.2.9-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
 관리자 권한이나 Python 설치는 필요하지 않습니다. Windows의 설치된 앱 목록에서 제거할 수 있습니다.
 
 [Fluff 원본](https://petdex.dev/pets/fluff)에서 펫을 받아 `pet.json`과 `spritesheet.webp`를 `%USERPROFILE%\.codex\pets\fluff`에 둔 뒤 Pawline을 실행합니다.
