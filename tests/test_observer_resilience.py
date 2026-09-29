@@ -16,6 +16,7 @@ from fluff_monitor.views import desktop_view
 from test_transport import frame, msg
 
 A = '11111111-1111-4111-8111-111111111111'
+B = '22222222-2222-4222-8222-222222222222'
 
 
 class ObserverResilienceTests(unittest.TestCase):
@@ -80,8 +81,104 @@ class ObserverResilienceTests(unittest.TestCase):
                 self.assertEqual(value['observation_disabled'], 'observation_queue_limit')
                 self.assertEqual(value['verdict'], 'UNKNOWN')
                 self.assertIsNone(value['served'])
+                # The adapter is still alive: a new connection can observe a
+                # complete request/response instead of needing a CLI restart.
+                self.assertFalse(cap.feed(msg('s2c', dict(type='response.completed',
+                    response=dict(id='late', model='old', status='completed')), conn=1)))
+                self.assertTrue(cap.event('ws_open', dict(conn=2)))
+                self.assertTrue(cap.feed(msg('c2s', dict(type='response.create',
+                    model='fresh', client_metadata=dict(thread_id=B)), conn=2)))
+                self.assertTrue(cap.flush())
+                self.assertTrue(cap.feed(msg('s2c', dict(type='response.completed',
+                    response=dict(id='new', model='fresh', status='completed')), conn=2)))
+                self.assertTrue(cap.flush())
+                value = desktop_view(directory, thread_id=B)
+                self.assertIsNone(value['observation_disabled'])
+                self.assertEqual(value['verdict'], 'ok')
+                self.assertEqual(value['served'], 'fresh')
             finally:
                 release.set()
+                cap.close()
+
+    def test_loss_before_first_accepted_message_publishes_and_recovers_repeatedly(self):
+        with tempfile.TemporaryDirectory() as directory:
+            cap = DesktopCapture(directory, max_bytes=4096)
+            try:
+                self.assertTrue(cap.flush())
+                for conn in range(1, 7, 2):
+                    self.assertFalse(cap.feed(msg('c2s', dict(type='response.create',
+                        model='lost', input='PRIVATE_' * 1000), conn=conn)))
+                    self.assertTrue(cap.flush())
+                    value = json.loads(Path(directory, 'desktop.json').read_text())
+                    self.assertEqual(value['observation_disabled'], 'observation_queue_limit')
+                    self.assertIsNone(value['served'])
+                    self.assertGreater(value['last_observation_loss']['incoming_bytes'], 4096)
+                    self.assertNotIn('PRIVATE_', json.dumps(value))
+                    # Frames from any previous generation stay rejected, even
+                    # after the global disabled indication has cleared.
+                    self.assertTrue(cap.feed(msg('c2s', dict(type='response.create',
+                        model='fresh', client_metadata=dict(thread_id=B)), conn=conn + 1)))
+                    self.assertTrue(cap.feed(msg('s2c', dict(type='response.completed',
+                        response=dict(id=str(conn), model='fresh', status='completed')), conn=conn + 1)))
+                    self.assertTrue(cap.flush())
+                    self.assertFalse(cap.event('ws_open', dict(conn=1)))
+                    self.assertFalse(cap.feed(msg('s2c', dict(type='response.completed',
+                        response=dict(id='late', model='wrong', status='completed')), conn=1)))
+                    value = desktop_view(directory, thread_id=B)
+                    self.assertIsNone(value['observation_disabled'])
+                    self.assertEqual(value['served'], 'fresh')
+                    self.assertEqual(value['verdict'], 'ok')
+            finally:
+                cap.close()
+
+    def test_recovery_does_not_restore_a_different_sessions_lost_response(self):
+        with tempfile.TemporaryDirectory() as directory:
+            cap = DesktopCapture(directory, max_bytes=4096)
+            try:
+                cap.feed(msg('c2s', dict(type='response.create', model='old',
+                    client_metadata=dict(thread_id=A)), conn=1))
+                cap.feed(msg('s2c', dict(type='response.completed', response=dict(
+                    id='old', model='old', status='completed')), conn=1))
+                self.assertTrue(cap.flush())
+                self.assertEqual(desktop_view(directory, thread_id=A)['served'], 'old')
+                self.assertFalse(cap.feed(msg('c2s', dict(input='x' * 5000), conn=1)))
+                # Recovery can be queued before the worker handles the loss.
+                cap.event('http_open', dict(conn=2))
+                cap.feed(msg('c2s', dict(type='response.create', model='fresh',
+                    client_metadata=dict(thread_id=B)), conn=2))
+                cap.feed(msg('s2c', dict(type='response.completed', response=dict(
+                    id='new', model='fresh', status='completed')), conn=2))
+                self.assertTrue(cap.flush())
+                old = desktop_view(directory, thread_id=A)
+                fresh = desktop_view(directory, thread_id=B)
+                self.assertTrue(old['capture_lost'])
+                self.assertIsNone(old['served'])
+                self.assertEqual(old['verdict'], 'UNKNOWN')
+                self.assertEqual(fresh['served'], 'fresh')
+                self.assertEqual(fresh['verdict'], 'ok')
+            finally:
+                cap.close()
+
+    def test_utf8_prompt_that_fits_memory_budget_is_not_charged_fourfold(self):
+        with tempfile.TemporaryDirectory() as directory:
+            cap = DesktopCapture(directory)
+            try:
+                request = dict(type='response.create', model='fixture',
+                    client_metadata=dict(thread_id=A),
+                    input=[dict(role='user', content='x' * (5 * 1024 * 1024) + '🐾')])
+                message = proxy.WsMessage('c2s', json.dumps(request, ensure_ascii=False),
+                    time.time(), 1)
+                self.assertTrue(cap.feed(message))
+                self.assertTrue(cap.flush())
+                cap.feed(msg('s2c', dict(type='response.completed', response=dict(
+                    id='large', model='fixture', status='completed'))))
+                self.assertTrue(cap.flush())
+                value = desktop_view(directory, thread_id=A)
+                self.assertIsNone(value['observation_disabled'])
+                self.assertEqual(value['served'], 'fixture')
+                self.assertEqual(value['verdict'], 'ok')
+                self.assertLess(Path(directory, 'desktop.json').stat().st_size, 8192)
+            finally:
                 cap.close()
 
     def test_failed_snapshot_write_can_recover_without_a_relay_exception(self):
@@ -238,6 +335,15 @@ class ObserverResilienceTests(unittest.TestCase):
                 self.assertIsNone(value['served'])
                 self.assertEqual(value['observation_disabled'], 'observation_processing_failed')
                 self.assertTrue(cap.worker.is_alive())
+                cap.feed(msg('c2s', dict(type='response.create', model='fresh',
+                    client_metadata=dict(thread_id=A)), conn=2))
+                cap.feed(msg('s2c', dict(type='response.completed', response=dict(
+                    id='recovered', model='fresh', status='completed')), conn=2))
+                self.assertTrue(cap.flush())
+                value = desktop_view(directory, thread_id=A)
+                self.assertIsNone(value['observation_disabled'])
+                self.assertEqual(value['served'], 'fresh')
+                self.assertEqual(value['verdict'], 'ok')
             finally:
                 cap.close()
 

@@ -90,6 +90,57 @@ def read_exact(sock,n):
 
 
 class HTTPRecoveryTests(unittest.TestCase):
+    def test_queue_loss_recovers_on_next_http_exchange_without_restarting_proxy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cap = DesktopCapture(tmp, max_bytes=8192)
+            server_ca, client_ca = proxy.CertAuthority(), proxy.CertAuthority()
+            replies = [wire(event('lost', 'old', 'completed')),
+                       wire(event('fresh', 'fresh', 'completed'), 'gzip')]
+            server = Server(server_ca.context_for('localhost'), replies)
+            transport = proxy.InterceptProxy(client_ca, on_message=cap.feed, on_event=cap.event,
+                upstream_context=ssl.create_default_context(cafile=str(server_ca.cert_path)),
+                require_auth=True)
+            transport.start()
+            tls = None
+            try:
+                tls = connect(transport.port, server.port, client_ca, transport.auth_token)
+                expected = []
+                for index, model in enumerate(('old', 'fresh')):
+                    body = json.dumps(dict(model=model, client_metadata=dict(thread_id=A),
+                        input=[dict(role='user', content='PRIVATE_' * (2000 if index == 0 else 1))])).encode()
+                    expected.append(body)
+                    tls.sendall((f'POST /backend-api/codex/responses HTTP/1.1\r\nHost: localhost\r\n'
+                        f'Content-Length: {len(body)}\r\nConnection: keep-alive\r\n\r\n').encode() + body)
+                    self.assertEqual(read_exact(tls, len(replies[index])), replies[index])
+                    if index == 0:
+                        self.assertTrue(cap.flush())
+                        value = desktop_view(tmp, thread_id=A)
+                        self.assertEqual(value['observation_disabled'], 'observation_queue_limit')
+                        self.assertIsNone(value['served'])
+                    else:
+                        end = time.monotonic() + 2
+                        while time.monotonic() < end:
+                            value = cap.agg.current(A)
+                            if value.get('status') == 'completed' and not value.get('connected'):
+                                break
+                            time.sleep(.01)
+                        self.assertTrue(cap.flush())
+                        value = desktop_view(tmp, thread_id=A)
+                        self.assertIsNone(value['observation_disabled'])
+                        self.assertEqual(value['served'], 'fresh')
+                        self.assertEqual(value['verdict'], 'ok')
+                self.assertEqual(server.received, expected)
+                self.assertEqual(server.errors, [])
+                self.assertNotIn('PRIVATE_', (Path(tmp) / 'desktop.json').read_text())
+            finally:
+                if tls:
+                    tls.close()
+                transport.stop()
+                server.close()
+                server_ca.close()
+                client_ca.close()
+                cap.close()
+
     def test_incremental_sse_is_visible_before_completion_and_observer_failure_keeps_wire(self):
         source,writer=socket.socketpair();relay,reader=socket.socketpair()
         reader.settimeout(2)
