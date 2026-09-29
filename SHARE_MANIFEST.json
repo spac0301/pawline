@@ -350,8 +350,8 @@
     },
     {
       "path": "tests/test_observer_process.py",
-      "sha256": "f05f217fdb1711feb3c8692747de9ced74481590e30f35a66826c31af8064af9",
-      "bytes": 16993
+      "sha256": "500fa8d88c5d5b42d1446730170ae23c1711f607efffab842469d54ef37f2367",
+      "bytes": 17314
     },
     {
       "path": "tests/test_observer_resilience.py",
