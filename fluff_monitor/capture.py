@@ -6,6 +6,7 @@ on one worker, outside the socket pumps. No provider probes are generated.
 from __future__ import annotations
 
 from collections import deque
+from dataclasses import replace
 import argparse
 import os
 from pathlib import Path
@@ -26,12 +27,12 @@ MAX_QUEUE_BYTES = 16 * 1024 * 1024
 
 
 class DesktopCapture:
-    """One bounded inbox and reducer. Overload disables observation, never relay.
+    """One bounded inbox and reducer. Loss invalidates old connections, never relay.
 
-    Once an event is lost, this capture instance stays explicitly unobserved.
-    It cannot guess the missing request/response association. A normal adapter
-    restart creates a new instance. Snapshot write failures alone are retried
-    at the publication interval without blocking the socket threads.
+    Proxy connection IDs increase monotonically. A loss quarantines IDs already
+    seen; a fresh connection can resume observation without restarting the CLI.
+    Missing frames on an old connection are never guessed or rebound. Snapshot
+    write failures are retried without blocking the socket threads.
     """
     def __init__(self, directory=None, *, publish_interval=PUBLISH_INTERVAL,
                  max_items=MAX_QUEUE_ITEMS, max_bytes=MAX_QUEUE_BYTES):
@@ -46,21 +47,38 @@ class DesktopCapture:
         self.published = -1
         self.requested_flush = 0
         self.disabled_reason = None
+        self.last_connection = self.invalid_through = -1
+        self.generation = 0
+        self.pending_loss = None
+        self.last_observation_loss = None
         self.publication_failures = 0
         self.stopping = False
         self.active = True
         self.worker = threading.Thread(target=self._run, name="fluff-observer", daemon=True)
         self.worker.start()
 
-    def _enqueue(self, kind, value, size):
+    def _invalidate_locked(self, reason, incoming_bytes=0):
+        """Reserve a loss barrier even when the data inbox is full (lock held)."""
+        self.generation += 1
+        self.accepted += 1
+        self.invalid_through = self.last_connection
+        self.disabled_reason = reason
+        self.last_observation_loss = dict(
+            reason=reason, generation=self.generation, at=time.time(),
+            connection_through=self.invalid_through, queue_items=len(self.inbox),
+            queue_bytes=self.queued_bytes, incoming_bytes=incoming_bytes)
+        self.pending_loss = (self.generation, self.accepted, reason)
+        self.inbox.clear()
+        self.queued_bytes = 0
+        self.condition.notify_all()
+
+    def _enqueue(self, kind, value, size, conn):
         with self.condition:
-            if self.stopping or self.disabled_reason:
+            if self.stopping or conn <= self.invalid_through:
                 return False
+            self.last_connection = max(self.last_connection, conn)
             if len(self.inbox) >= self.max_items or self.queued_bytes + size > self.max_bytes:
-                self.disabled_reason = "observation_queue_limit"
-                self.inbox.clear()
-                self.queued_bytes = 0
-                self.condition.notify_all()
+                self._invalidate_locked("observation_queue_limit", size)
                 return False
             self.accepted += 1
             self.inbox.append((self.accepted, kind, value, size))
@@ -69,14 +87,16 @@ class DesktopCapture:
             return True
 
     def feed(self, message):
-        # Four bytes per codepoint is a conservative bound without copying the
-        # whole request into another UTF-8 buffer on the socket thread.
-        return self._enqueue("message", message, 4 * len(message.text) + 256)
+        # Retain UTF-8 bytes, not a wide Unicode copy of a mostly-ASCII prompt.
+        # JSON parsing stays on the worker. Account for the retained buffer plus
+        # fixed message/queue overhead rather than charging every character 4x.
+        data = message.text.encode("utf-8") if isinstance(message.text, str) else message.text
+        return self._enqueue("message", replace(message, text=data), len(data) + 256, message.conn)
 
     def event(self, kind, info):
         if kind not in ("ws_open", "ws_close", "http_open", "http_close", "parse_lost"):
             return True
-        return self._enqueue("event", (kind, dict(info)), 1024)
+        return self._enqueue("event", (kind, dict(info)), 1024, info["conn"])
 
     def flush(self, timeout=3):
         """Wait for a published observation barrier (diagnostics/tests only)."""
@@ -99,42 +119,52 @@ class DesktopCapture:
                      implementation="fluff-monitor/" + __version__,
                      transports=["websocket", "http"], sessions=self.agg.sessions(),
                      session_protocol=1, observation_disabled=self.disabled_reason,
+                     last_observation_loss=self.last_observation_loss,
                      publication_failures=self.publication_failures,
                      detail="선택한 Codex 작업의 실제 요청 모델·추론 단계와 서버 응답 모델명")
         self.publisher.publish("desktop", value, heartbeat=True)
 
     def _run(self):
         next_publish = time.monotonic()
-        invalidated = False
+        handled_generation = 0
         while True:
             with self.condition:
-                disabled = self.disabled_reason
+                loss = self.pending_loss
+                self.pending_loss = None
                 stopping = self.stopping
-                item = self.inbox.popleft() if self.inbox and not disabled else None
+                item = self.inbox.popleft() if self.inbox else None
                 if item:
                     self.queued_bytes -= item[3]
                 force = self.requested_flush > self.published
-            if disabled and not invalidated:
-                self.agg.invalidate_all(disabled)
-                invalidated = True
+            if loss:
+                handled_generation, sequence, reason = loss
+                self.agg.invalidate_all(reason)
                 with self.condition:
-                    self.processed = self.accepted
+                    self.processed = max(self.processed, sequence)
                 next_publish = 0
             if item:
                 sequence, kind, value, _ = item
+                with self.condition:
+                    if handled_generation != self.generation:
+                        # Another loss occurred while the worker was reducing.
+                        # Its reserved barrier covers this discarded item too.
+                        continue
+                    self.disabled_reason = None
                 try:
+                    self.agg.resume_observation()
                     if kind == "message":
                         self.agg.feed(value)
                     else:
                         self.agg.connection_event(*value)
                 except Exception:
                     with self.condition:
-                        self.disabled_reason = "observation_processing_failed"
-                        self.inbox.clear()
-                        self.queued_bytes = 0
+                        self._invalidate_locked("observation_processing_failed")
                 finally:
                     with self.condition:
                         self.processed = max(self.processed, sequence)
+            with self.condition:
+                if handled_generation != self.generation:
+                    continue
             now = time.monotonic()
             if stopping:
                 self.active = False
@@ -148,14 +178,14 @@ class DesktopCapture:
                     with self.condition:
                         # A loss can arrive while filesystem IO is blocked.
                         # Do not release a barrier for the earlier good snapshot.
-                        if not (self.disabled_reason and not invalidated):
+                        if handled_generation == self.generation:
                             self.published = self.processed
                             self.condition.notify_all()
                 next_publish = time.monotonic() + self.interval
             if stopping:
                 return
             with self.condition:
-                if not self.inbox and not (self.disabled_reason and not invalidated):
+                if not self.inbox and self.pending_loss is None:
                     self.condition.wait(max(0, next_publish - time.monotonic()))
 
     def close(self):

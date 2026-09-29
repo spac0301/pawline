@@ -152,6 +152,10 @@ class LiveAggregator:
         self.open_connections.clear()
         self.lost_connections.clear()
 
+    def resume_observation(self):
+        """Accept a fresh connection; existing requests keep their loss markers."""
+        self.disabled_reason = None
+
     def _drop_session(self, tid):
         req = self.session_requests.pop(tid)
         self._mismatches.pop(tid, None)
