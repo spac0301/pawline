@@ -52,6 +52,17 @@ with tempfile.TemporaryDirectory() as tmp:
     assert panel.gpt.cache.text()==panel.anthropic.cache.text()
     assert '전체 입력' in panel.gpt.cache.toolTip()
     panel.grab().save(str(out/'panel-dark.png'))
+    stopped = dict(route, requested=None, served=None, configured_model='gpt-6-astra',
+                   configured_effort='max', verdict='UNKNOWN', observation_disabled='observation_queue_limit')
+    panel.update_data(stopped, claude);drain()
+    assert panel.gpt.requested.caption_label.text() == '설정'
+    assert panel.gpt.requested.text() == 'gpt-6-astra · max'
+    assert panel.gpt.served.text() == '—'
+    assert panel.gpt.status.text() == '관측 중단'
+    assert panel.gpt.cache.text().startswith('입력 캐시 96.8%')
+    panel.grab().save(str(out/'capture-stopped.png'))
+    panel.update_data(route, claude);drain()
+    assert panel.gpt.requested.caption_label.text() == '요청'
     expanded=[]
     for name,anchor in [('gpt',panel.gpt.title),('claude',panel.anthropic.title)]:
         before=[w.mapTo(panel,ui.QPoint(0,0)) for w in widgets]

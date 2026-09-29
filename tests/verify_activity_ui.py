@@ -44,6 +44,18 @@ try:
             while ui.Gtk.events_pending():ui.Gtk.main_iteration_do(False)
             time.sleep(.005)
     panel.show_all();panel.update(route,claude);drain()
+    stopped = dict(route, requested=None, served=None, configured_model='gpt-6-astra',
+                   configured_effort='max', verdict='UNKNOWN', observation_disabled='observation_queue_limit',
+                   detail='응답 모델 관측이 중단됐습니다. 사용량은 로컬 기록에서 읽습니다.')
+    panel.update(stopped,claude);drain()
+    assert panel.requested.caption_label.get_text() == '설정'
+    assert panel.requested.get_text() == 'gpt-6-astra · max'
+    assert panel.served.get_text() == '—'
+    assert panel.chip.get_text() == '관측 중단'
+    assert panel.cache.get_text().startswith('입력 캐시 90.0%')
+    ui.capture_widgets(panel,pet,out/'capture-stopped.png')
+    panel.update(route,claude);drain()
+    assert panel.requested.caption_label.get_text() == '요청'
     # Exercise real GTK window placement, without moving windows on the user's desktop.
     workarea=SimpleNamespace(x=0,y=0,width=1280,height=800)
     pet.sprite_x,pet.sprite_y=600,300
