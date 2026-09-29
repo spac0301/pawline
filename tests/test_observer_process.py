@@ -304,7 +304,11 @@ class ObserverProcessTests(unittest.TestCase):
                     (source / '__init__.py').write_text('__version__ = "fixture-updated"\n')
                     observer_runtime.store_bundle(observer_runtime.build_bundle(source), state)
                     after = request_reload(state)
-                    self.assertEqual(after['relay_pid'], wrapper.pid)
+                    # Windows venv python.exe is a redirector, so Popen.pid can
+                    # belong to its launcher rather than the relay interpreter.
+                    # Compare the actual relay identity before and after reload.
+                    self.assertEqual(after['relay_pid'], before['relay_pid'])
+                    self.assertEqual(after['run_id'], before['run_id'])
                     self.assertNotEqual(before['worker_pid'], after['worker_pid'])
                     self.assertEqual(after['version'], 'fixture-updated')
                     self.assertIsNone(wrapper.poll())
