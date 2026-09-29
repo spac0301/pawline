@@ -1,5 +1,9 @@
 # 검증 범위 · 0.2.8
 
+0.2.8의 설치·실행 EXE는 미서명입니다. 수신자 Windows 11에서 Smart App Control이 실행 전에 차단한 사례가 확인됐습니다.
+아래 CI는 이 정책을 검증하지 않았으며, 일반 Windows 11에서 보안 정책까지 통과한다는 증거로 사용할 수 없습니다.
+현재 실행 제한과 필요한 조치는 [Windows 안내](WINDOWS.md#실행-제한)에 정리했습니다.
+
 ## Windows 배포본
 
 [빌드·실행 검사](https://github.com/spac0301/pawline/actions/runs/36509960933) · [설치·제거 검사](https://github.com/spac0301/pawline/actions/runs/36510204789)

@@ -45,13 +45,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "b7f8a130f7f994caa714bc56767b0d6c6e7db2d90d6fcc47efe0046d5c303590",
-      "bytes": 2357
+      "sha256": "0200c9f3dc95ef785a3260fd537672882f31834d8cf5ff83418b54d83840f900",
+      "bytes": 2431
     },
     {
       "path": "SECURITY.md",
-      "sha256": "f4c2b97cea8b8f9211747d3c0a0088317638de9552e53ca54c35757acd3d4eef",
-      "bytes": 7490
+      "sha256": "78f0bb8a2f96829959245b866952fe0df29077855be9e4655d021e7e8646892f",
+      "bytes": 8090
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -65,13 +65,13 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "6cfa34f55728e9162c1469213dd5025c3074f274202ca290604ee906331a72d2",
-      "bytes": 3389
+      "sha256": "df17bf70a8afd4c4043fefa3024efab99a51026ab081d0c5d61a900ef4eec190",
+      "bytes": 3805
     },
     {
       "path": "WINDOWS.md",
-      "sha256": "d4305423854577ddf566c8172d9299392533dd7508cc690f8d4753d110f4e8e1",
-      "bytes": 5398
+      "sha256": "00f3c1480d749acde66ac588f1d9b26892c13236e56471751d3d7074a74b4e50",
+      "bytes": 6178
     },
     {
       "path": "assets/app/pawline.ico",

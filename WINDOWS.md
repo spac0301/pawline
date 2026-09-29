@@ -2,6 +2,17 @@
 
 [Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.8)
 
+## 실행 제한
+
+**0.2.8은 코드 서명이 없는 시험판입니다.** Smart App Control이 켜진 Windows 11에서 실행 전 차단된 사례가 확인됐습니다.
+설치 EXE와 `pawline.exe`, `pawline-capture.exe` 모두 서명이 없습니다. Windows CI의 실행 검사 통과는 이 보안 정책의 통과를 의미하지 않습니다.
+다운로드 위치나 ZIP 형식을 바꿔도 서명은 생기지 않습니다.
+
+해결하려면 신뢰할 수 있는 인증서로 설치·실행·제거 파일과 포함된 실행 코드를 서명하고, Smart App Control을 켠 Windows 11에서 다시 검증해야 합니다.
+현재 공개된 0.2.8은 이 조건을 충족하지 않습니다. [Microsoft 서명 안내](https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/code-signing-for-smart-app-control)
+
+Pawline은 다른 컴퓨터의 제어 권한을 요구하지 않습니다. 선택 기능인 응답 관측기는 같은 컴퓨터의 `127.0.0.1`에만 연결을 받습니다.
+
 ## 설치 파일로 실행
 
 `Pawline-Setup-0.2.8-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
@@ -19,8 +30,6 @@
 ```powershell
 .\pawline\pawline.exe --pet-dir "C:\path\to\fluff"
 ```
-
-실행파일은 아직 코드 서명이 없는 초기 Windows 배포본입니다. 운영체제가 실행을 차단한다면 보안 설정을 낮추지 말고 소스 실행 경로를 사용하거나 검토를 요청하세요.
 
 ## 표시되는 정보
 

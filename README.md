@@ -8,7 +8,7 @@ Codex와 Claude Code의 작업 상태, 요청·응답 모델, 입력 캐시 사�
 
 ## 다운로드
 
-**[Windows · 설치 EXE](https://github.com/spac0301/pawline/releases/download/v0.2.8/Pawline-Setup-0.2.8-x64.exe)** — Python 설치 없이 사용합니다. [설치 안내](WINDOWS.md)
+**[Windows · 설치 EXE](https://github.com/spac0301/pawline/releases/download/v0.2.8/Pawline-Setup-0.2.8-x64.exe)** — 미서명 시험판. Windows 11의 Smart App Control에서 실행이 차단될 수 있습니다. [실행 제한·설치 안내](WINDOWS.md)
 
 **[Linux · ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.8/pawline-0.2.8-source.zip)** — Python·GTK3 환경에서 실행합니다. [설치 안내](INSTALL.md)
 

@@ -83,6 +83,13 @@ that deployment boundary.
 
 ## Distribution
 
+The 0.2.8 installer and both application executables are unsigned. A recipient
+reported a Windows 11 Smart App Control block before execution; static inspection
+of the exact release binaries confirms that they contain no Authenticode signature.
+The Windows Server CI did not exercise Smart App Control. A supported signed release
+must cover executable dependencies, the installer and uninstaller, and then be
+tested under the actual Windows 11 policy. See the [Microsoft signing guidance](https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/code-signing-for-smart-app-control).
+
 The sharing archive is built from an explicit source/asset/license allowlist.
 It excludes `.venv`, user profiles, caches, logs, captured traffic, CA/key
 material, role-source bindings and local deployment/review artifacts. Personal
