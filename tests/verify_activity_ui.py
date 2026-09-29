@@ -32,7 +32,7 @@ try:
     now=time.time()
     usage=dict(last=dict(input_tokens=10000,cached_input_tokens=9000,output_tokens=500,cached_fraction=.9),observed_at=now-3)
     route=dict(thread_id='parent',title='NBV 총괄',source='desktop',label='앱 실시간',active=True,connected=True,
-               updated_at=now,observed_at=now-3,verdict='ok',requested='gpt-6-astra',served='gpt-6-astra',effort='max',
+               activity='running',updated_at=now,observed_at=now-3,verdict='ok',requested='gpt-6-astra',served='gpt-6-astra',effort='max',
                metrics_available=True,usage=usage,children=dict(running=2,details=[dict(name='검토',state='running')]),
                sessions=[dict(thread_id='parent',title='NBV 총괄',requested='gpt-6-astra',effort='max')],history_count=3)
     claude=dict(session_id='new',selected_session=None,label='응답 완료',state='completed',title='NBV 구현 담당',
@@ -52,7 +52,7 @@ try:
     assert panel.requested.get_text() == 'gpt-6-astra · max'
     assert panel.served.get_text() == '—'
     assert panel.chip.get_text() == '관측 중단'
-    assert panel.cache.get_text().startswith('입력 캐시 90.0%')
+    assert panel.cache.get_text()=='입력 캐시' and panel.cache.metric.get_text()=='90.0%'
     ui.capture_widgets(panel,pet,out/'capture-stopped.png')
     panel.update(route,claude);drain()
     assert panel.requested.caption_label.get_text() == '요청'
@@ -76,23 +76,69 @@ try:
     workarea.x=0;pet.sprite_x,pet.sprite_y=600,300
     panel.place_near(pet,restore=False);drain()
     ui.capture_widgets(panel,pet,out/'panel.png')
-    assert panel.get_size().width<=288,panel.get_size()
-    assert panel.get_size().height<=210,panel.get_size()
+    def color(widget, background=False):
+        style=widget.get_style_context()
+        value=(style.get_background_color if background else style.get_color)(ui.Gtk.StateFlags.NORMAL)
+        return '#'+''.join(f'{round(v*255):02x}' for v in (value.red,value.green,value.blue))
+    cache_colors={'dark':(color(panel.cache),color(panel.gpt_cache_button,True))}
+    assert panel.get_size().width<=320,panel.get_size()
+    assert panel.get_size().height==307,panel.get_size()
     size=list(panel.get_size())
     assert panel.gpt_mark.get_pixbuf().get_width()==16
     assert panel.claude_mark.get_pixbuf().get_width()==16
     assert panel.session_button.translate_coordinates(panel,0,0)[0]==panel.claude_button.translate_coordinates(panel,0,0)[0]
-    assert panel.requested.translate_coordinates(panel,0,0)[0]==panel.claude_requested.translate_coordinates(panel,0,0)[0]
-    value_column=[panel.session_title,panel.claude_title,panel.requested,panel.served,panel.claude_requested,panel.claude_served,panel.cache,panel.claude_cache]
+    assert not panel.requested.get_visible() and not panel.claude_requested.get_visible()
+    value_column=[panel.session_title,panel.claude_title,panel.served,panel.claude_served,panel.cache,panel.claude_cache]
     value_x=[w.translate_coordinates(panel,0,0)[0] for w in value_column]
-    assert len(set(value_x))==1,value_x
+    assert value_x[0]==value_x[1] and value_x[2]==value_x[3] and value_x[4]==value_x[5],value_x
+    assert value_x[0]==value_x[4]==panel.gpt_mark.translate_coordinates(panel,0,0)[0],value_x
+    assert value_x[2]==panel.cache.metric.translate_coordinates(panel,0,0)[0],value_x
+    assert value_x[3]==panel.claude_cache.metric.translate_coordinates(panel,0,0)[0],value_x
+    typography={}
+    for name,widget in [('title',panel.session_title),('model',panel.served),('metric',panel.cache.metric),('caption',panel.cache)]:
+        font=widget.get_style_context().get_font(ui.Gtk.StateFlags.NORMAL)
+        pixels=font.get_size()/ui.Pango.SCALE
+        if not font.get_size_is_absolute():pixels*=widget.get_screen().get_resolution()/72
+        typography[name]=dict(family=font.get_family(),pixels=round(pixels,2),weight=int(font.get_weight()),color=color(widget))
+    assert [v['pixels'] for v in typography.values()]==[14,13,13,12],typography
+    assert [v['weight'] for v in typography.values()]==[600,500,600,400],typography
+    for widget in (panel.served,panel.claude_served):
+        assert widget.create_pango_layout(widget.get_text()).get_pixel_size()[0]<=widget.get_allocated_width()
+    arrow_edges=[image.translate_coordinates(panel,0,0)[0]+image.get_allocated_width() for image,_ in panel.chevrons]
+    assert len(set(arrow_edges))==1,arrow_edges
+    assert panel.cache.create_pango_layout(panel.cache.get_text()).get_pixel_size()[0] <= panel.cache.get_allocated_width()
     assert panel.session_title.translate_coordinates(panel.session_button,0,0)[0]==8
     assert panel.claude_title.translate_coordinates(panel.claude_button,0,0)[0]==8
     assert (panel.gpt_dot.get_allocated_width(),panel.gpt_dot.get_allocated_height())==(5,5)
     assert (panel.claude_dot.get_allocated_width(),panel.claude_dot.get_allocated_height())==(5,5)
-    assert '90.0%' in panel.cache.get_text()
-    assert '90.0%' in panel.claude_cache.get_text()
-    assert panel.cache.get_text().startswith('입력 캐시 90.0% · ')
+    assert panel.cache.metric.get_text()=='90.0%'
+    assert panel.claude_cache.metric.get_text()=='90.0%'
+    assert panel.provider_context['gpt'][1].get_text()=='작업 중'
+    assert panel.provider_context['claude'][1].get_text()=='응답 완료'
+    assert panel.chip.get_text()=='모델 일치' and panel.claude.get_text()=='기록 확인'
+    assert panel.pin_toggle.get_active() and panel.pin_toggle.get_tooltip_text()=='창 고정 해제'
+    panel.pin_toggle.clicked();drain()
+    assert not panel.pinned and panel.pin_toggle.get_tooltip_text()=='창 고정'
+    panel.pin_toggle.clicked();drain()
+    assert panel.pinned and panel.pin_toggle.get_tooltip_text()=='창 고정 해제'
+    toolbar_buttons=[w for w in panel.pin_toggle.get_parent().get_children() if isinstance(w,ui.Gtk.Button)]
+    assert set(toolbar_buttons)=={panel.pin_toggle,panel.theme_button}
+    assert not hasattr(panel,'menu_button') and not hasattr(panel,'action_menu')
+    panel.theme_button.clicked();drain()
+    assert panel.settings['theme']=='light' and panel.pinned
+    assert panel.theme_button.get_tooltip_text()=='어두운 화면으로 전환'
+    panel.theme_button.clicked();drain()
+    assert panel.settings['theme']=='dark' and panel.pinned
+    assert panel.theme_button.get_tooltip_text()=='밝은 화면으로 전환'
+    for provider in ('gpt','claude'):
+        assert panel.provider_context[provider][0].get_text()=='자동 추적'
+    panel.settings.update(codex_thread='parent',claude_session='role:implementation')
+    panel.update(route,claude);drain()
+    assert all(panel.provider_context[v][0].get_text()=='직접 선택' for v in ('gpt','claude'))
+    ui.capture_widgets(panel,pet,out/'manual-selection.png')
+    panel.settings.pop('codex_thread');panel.settings.pop('claude_session')
+    panel.update(route,claude);drain()
+    assert panel.cache.age.get_text().endswith('초 전')
     assert '새 출력 500 토큰' in panel.cache.get_tooltip_text()
     assert panel.claude_requested.get_text()=='claude-opus-5.5 · max'
     assert len(panel.claude_menu.choice_items)==2
@@ -100,14 +146,15 @@ try:
     assert len(panel.claude_menu.choice_items)==2,'role rotation grew the menu'
     assert not any('이전 작업' in str(getattr(w,'get_label',lambda:'' )()) for w in panel.session_menu.items.get_children())
     panel.update(dict(route,usage=None),dict(claude,usage=None));drain()
-    assert '기록 대기' in panel.cache.get_text()
-    assert '기록 대기' in panel.claude_cache.get_text()
+    assert panel.cache.get_text()==panel.claude_cache.get_text()=='입력 캐시'
+    assert panel.cache.metric.get_text()==panel.claude_cache.metric.get_text()=='기록 대기'
+    assert panel.cache.metric.translate_coordinates(panel,0,0)[0]==value_x[2]
     ui.capture_widgets(panel,pet,out/'unknown.png')
     long_route=dict(route,title='아주 긴 한글 작업 이름과 very long English title without growing the panel',
         verdict='REROUTED',served='gpt-6-sol',historical_mismatches=1)
     panel.update(long_route,claude);drain()
     assert panel.get_size().width==size[0]
-    assert '불일치' in panel.chip.get_text()
+    assert panel.chip.get_text()=='모델 다름'
     assert panel.served.get_text()=='gpt-6-sol'
     assert abs(panel.get_position().root_y+panel.get_size().height/2-(pet.sprite_y+pet.view.height/2))<=.5
     ui.capture_widgets(panel,pet,out/'mismatch-long-title.png')
@@ -118,8 +165,8 @@ try:
     expanded=[]
     for button,title_widget,provider in [(panel.session_button,panel.session_title,'gpt'),
                                          (panel.claude_button,panel.claude_title,'claude')]:
-        current=dict(route,title='Cross-Vendor AI 회의 보드 구현')
-        cc=dict(claude,title='Claude 구현 담당 · 도착 예측 검토')
+        current=dict(route,title='Cross-Vendor AI 회의 보드 구현 · 최근 작업 상세')
+        cc=dict(claude,title='Claude 구현 담당 · 도착 예측 검토 · 최근 작업 상세')
         panel.update(current,cc);drain()
         assert button.get_tooltip_text() is None
         before=[w.translate_coordinates(panel,0,0) for w in value_column]
@@ -135,9 +182,12 @@ try:
         assert reveal.title.get_allocated_width()>=natural,(provider,reveal.title.get_allocated_width(),natural)
         assert reveal.get_size().height==button.get_allocated_height()
         bx,by=button.translate_coordinates(panel,0,0);px,py=panel.get_position()
-        assert tuple(reveal.get_position())==(px+bx,py+by)
+        assert reveal.get_position().root_y==py+by
+        rx,ry=reveal.get_position()
+        assert not (rx < pet.sprite_x+pet.view.width and rx+width > pet.sprite_x
+                    and ry < pet.sprite_y+pet.view.height and ry+reveal.get_size().height > pet.sprite_y)
         assert reveal.title.translate_coordinates(reveal,0,0)[0]==8
-        for w in (panel.requested,panel.served,panel.claude_requested,panel.claude_served):
+        for w in (panel.served,panel.claude_served):
             _,wy=w.translate_coordinates(panel,0,0)
             assert by+reveal.get_size().height<=wy or by>=wy+w.get_allocated_height()
         assert panel.session_button.get_allocated_width()==panel.claude_button.get_allocated_width()
@@ -155,26 +205,46 @@ try:
             reveal._hover(False,SimpleNamespace(detail=ui.Gdk.NotifyType.NONLINEAR))
         panel._title_hover(button,False);settle()
         assert not reveal.get_visible()
-        assert panel.get_size().width==288
+        assert panel.get_size().width==320
 
-    for anchor, status in panel.reveal_labels.items():
-        status.set_text('활동 확인 중')
-        before = [w.translate_coordinates(panel,0,0) for w in value_column]
-        panel._title_hover(anchor, True); settle()
-        reveal = panel.title_reveal
-        assert reveal.get_visible()
-        assert reveal.title.get_text() == '활동 확인 중'
-        assert not reveal.arrow.get_visible()
-        assert reveal.title.get_allocated_width() >= status.create_pango_layout(status.get_text()).get_pixel_size()[0]
-        assert [w.translate_coordinates(panel,0,0) for w in value_column] == before
-        assert tuple(panel.get_size()) == before_size
-        name = 'gpt' if status is panel.chip else 'claude'
-        ui.capture_widgets(panel,pet,out/(name+'-status.png'))
-        panel._title_hover(anchor, False); settle()
-        assert not reveal.get_visible()
-        status.set_text('완료'); panel._title_hover(anchor, True); settle()
-        assert not reveal.get_visible(), 'unclipped status should stay inline'
-        panel._title_hover(anchor, False); settle()
+    for provider, controls in [('gpt',(panel.gpt_cache_button,panel.gpt_status_button)),
+                               ('claude',(panel.claude_cache_button,panel.claude_status_button))]:
+        for kind, button in zip(('cache','status'),controls):
+            before=tuple(panel.get_size())
+            button.set_active(True);drain()
+            popup=panel.detail_menu
+            assert popup.get_visible(),(provider,kind)
+            assert popup.get_size().width==320
+            if kind=='cache':
+                assert panel.cache_detail.get_visible() and not panel.detail_body.get_visible()
+                assert panel.cache_detail.data['cached']==9000 and panel.cache_detail.data['other']==1000
+                assert popup.get_size().height<=170,popup.get_size()
+            else:
+                assert not panel.cache_detail.get_visible() and panel.detail_body.get_visible()
+                assert panel.detail_body.get_text()==button.detail_source.get_tooltip_text()
+                assert panel.detail_body.get_allocated_height() >= panel.detail_body.get_layout().get_pixel_size()[1]
+                assert popup.get_size().height<=140,popup.get_size()
+            assert tuple(panel.get_size())==before
+            import cairo
+            surface=cairo.ImageSurface(cairo.FORMAT_ARGB32,*popup.get_size())
+            popup.draw(cairo.Context(surface))
+            surface.write_to_png(str(out/(provider+'-'+kind+'-detail.png')))
+            event=ui.Gdk.Event.new(ui.Gdk.EventType.KEY_PRESS);event.keyval=ui.Gdk.KEY_Escape
+            popup.emit('key-press-event',event);drain()
+            assert not popup.get_visible() and not button.get_active()
+
+    panel.gpt_cache_button.set_active(True);drain()
+    panel.update(dict(route,usage=None),claude);drain()
+    assert not panel.cache_detail.data['known']
+    assert panel.detail_menu.get_size().height<100,panel.detail_menu.get_size()
+    panel.gpt_cache_button.set_active(False);drain()
+    panel.chip.set_tooltip_text('새 응답의 모델명을 기다리고 있어요.')
+    panel.gpt_status_button.set_active(True);drain()
+    assert panel.detail_menu.get_size().height<90,panel.detail_menu.get_size()
+    surface=cairo.ImageSurface(cairo.FORMAT_ARGB32,*panel.detail_menu.get_size())
+    panel.detail_menu.draw(cairo.Context(surface));surface.write_to_png(str(out/'short-status-detail.png'))
+    panel.gpt_status_button.set_active(False);drain()
+    panel.update(route,claude);drain()
 
     # Identical selector rows, both sides/corners, and no overlap with the sprite.
     choices=[]
@@ -208,13 +278,14 @@ try:
         assert provider_columns[0]==provider_columns[1],provider_columns
     pet.sprite_x,pet.sprite_y=600,300
     panel.place_near(pet,restore=False);drain()
-    panel.settings['theme']='light';panel.apply_theme();panel.update(route,claude);drain()
+    panel.settings['theme']='light';panel.apply_theme();panel.update(route,claude);settle(.4)
+    cache_colors['light']=(color(panel.cache),color(panel.gpt_cache_button,True))
     assert list(panel.get_size())==size,panel.get_size()
     assert panel.claude_menu.items.get_style_context().has_class('light')
     ui.capture_widgets(panel,pet,out/'light.png')
     # Contrast is a measured text check, not a claim of complete accessibility compliance.
-    palettes=dict(dark=dict(background='#232427',text='#eeeeef',secondary='#a9aab1',task='#c6c7ce',gpt='#eeeeef',claude='#e8ab95',active='#a4bbed',good='#86c9a5',warning='#e4c18b',error='#f09b9f'),
-                  light=dict(background='#fafafa',text='#24252a',secondary='#686b75',task='#50535c',gpt='#24252a',claude='#98492e',active='#486798',good='#21734e',warning='#886020',error='#b44653'))
+    palettes={theme:{key:colors[key] for key in ('background','foreground','secondary','muted','accent','positive','warning','danger')}
+              for theme,colors in ui.THEMES.items()}
     def luminance(hex_color):
         rgb=[int(hex_color[i:i+2],16)/255 for i in (1,3,5)]
         linear=[v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in rgb]
@@ -227,6 +298,11 @@ try:
             fg=luminance(color);ratio=(max(fg,bg)+.05)/(min(fg,bg)+.05)
             assert ratio>=4.5,(theme,key,ratio)
             contrast[theme][key]=round(ratio,3)
+    for theme,(fg,bg) in cache_colors.items():
+        a,b=luminance(fg),luminance(bg)
+        ratio=(max(a,b)+.05)/(min(a,b)+.05)
+        assert ratio>=4.5,(theme,'cache',fg,bg,ratio)
+        contrast[theme]['rendered_cache']=round(ratio,3)
     # Separate information-window controls from temporary pet actions.
     actual_panel=ui.Panel({})
     settings=dict(ui.config.DEFAULTS,language='ko',walk=False,notifications=False,bubble='never',
@@ -234,8 +310,7 @@ try:
     actual_pet=ui.Fluff(view,settings,actual_panel);actual_panel.pet=actual_pet
     actual_panel.update(route,claude)
     actual_panel.toggle_pin()
-    panel_actions=[w.get_label() for w in actual_panel.action_menu.items.get_children() if isinstance(w,ui.Gtk.Button)]
-    assert panel_actions==['밝은 화면','정보창 고정 해제'],panel_actions
+    assert not hasattr(actual_panel,'action_menu')
     menu_cases=[]
     def intersects(a,b):
         return a[0]<b[0]+b[2] and a[0]+a[2]>b[0] and a[1]<b[1]+b[3] and a[1]+a[3]>b[1]
@@ -251,7 +326,7 @@ try:
         assert 0<=mr[0] and 0<=mr[1] and mr[0]+mr[2]<=1280 and mr[1]+mr[3]<=800,(name,mr)
         actions=[w.get_label() for w in menu.items.get_children() if isinstance(w,ui.Gtk.Button)]
         assert actions==['쓰다듬기','산책 켜기','펫 종료'],actions
-        assert not set(actions)&set(panel_actions)
+        assert all('고정' not in action and '화면' not in action for action in actions)
         menu_cases.append(dict(case=name,menu_rect=mr,pet_rect=sr,panel_rect=pr))
         if name=='middle':
             import cairo
@@ -275,22 +350,20 @@ try:
         assert not menu.get_visible(),selected
         assert actual_panel.pinned and actual_panel.get_visible(),selected
 
-    # Opening either menu closes the other; only the left menu changes pinning.
+    # Theme is one toolbar click; it closes temporary menus and preserves pinning.
     actual_pet._show_menu(None);drain()
-    actual_panel.menu_button.set_active(True);drain()
-    assert actual_panel.action_menu.get_visible() and not actual_pet.local_menu.get_visible()
-    mr=(*actual_panel.action_menu.get_position(),*actual_panel.action_menu.get_size())
-    pr=(*actual_panel.get_position(),*actual_panel.get_size())
-    surface=cairo.ImageSurface(cairo.FORMAT_ARGB32,pr[2],max(pr[3],mr[1]-pr[1]+mr[3]))
-    cr=cairo.Context(surface);actual_panel.draw(cr)
-    cr.translate(mr[0]-pr[0],mr[1]-pr[1]);actual_panel.action_menu.draw(cr)
-    surface.write_to_png(str(out/'panel-actions.png'))
-    actual_panel.pin_button.clicked();drain()
-    assert not actual_panel.pinned and not actual_panel.action_menu.get_visible()
-    actual_panel.toggle_pin()
-    actual_panel.menu_button.set_active(True);drain()
+    actual_panel.theme_button.clicked();drain()
+    assert not actual_pet.local_menu.get_visible() and actual_panel.pinned
+    assert actual_panel.settings['theme']=='light'
+    actual_panel.theme_button.clicked();drain()
+    assert actual_panel.settings['theme']=='dark' and actual_panel.pinned
+    actual_panel.pin_toggle.clicked();drain()
+    assert not actual_panel.pinned
+    actual_panel.pin_toggle.clicked();drain()
+    assert actual_panel.pinned
+    actual_panel.session_button.set_active(True);drain()
     actual_pet._show_menu(None);drain()
-    assert not actual_panel.action_menu.get_visible() and actual_pet.local_menu.get_visible()
+    assert not actual_panel.session_menu.get_visible() and actual_pet.local_menu.get_visible()
 
     # Real focus transfer on the private display dismisses the temporary menu.
     menu=actual_pet.local_menu
@@ -325,7 +398,7 @@ try:
     assert 'codex_thread' not in saved and 'claude_session' not in saved,saved
     assert json.loads((state/'desktop.json').read_text())['sessions'][1]['thread_id']=='old','native history was mutated'
     (out/'result.json').write_text(json.dumps(dict(passed=True,width=panel.get_size().width,height=panel.get_size().height,
-        role_rotation_menu_count=2,model_calls=0,isolated_display=True,contrast=contrast,value_column_x=value_x[0],status_dot_pixels=5,
+        role_rotation_menu_count=2,model_calls=0,isolated_display=True,contrast=contrast,typography=typography,value_column_x=value_x[2],label_column_x=value_x[0],chevron_edge=arrow_edges[0],status_dot_pixels=5,
         panel_placement=placement,vertical_alignment='fixed_sprite_center',gap_pixels=12,
         context_menu_cases=menu_cases,menu_roles_separated=True,pet_menu_dismissal_preserves_pin=True,
         outside_focus_dismisses_pet_menu=True,selector_cases=choices,inline_expansion=expanded,expired_saved_selections_cleared_in_main=True,
