@@ -27,6 +27,7 @@ from .catalog import display_title, SnapshotCatalog
 from .presentation import age_text, usage_text, route_status, menu_actions, model_text, gpt_request
 from .pet_state import MismatchAlerts, MotionCycle
 from .menu import MenuWindow, TitleReveal, menu_action, beside_position
+from .identity import APP_NAME, ICON, set_process_name
 
 CSS = b"""
 #routing-popup { background: transparent; }
@@ -187,7 +188,7 @@ class RoutingNotice(Gtk.Window):
         self.deadline, self.hovered = 0.0, False
         self.light = None
         self.set_name("routing-panel")
-        self.set_title("Fluff · 모델명 불일치 알림")
+        self.set_title("Pawline · 모델명 불일치 알림")
         self.set_decorated(False)
         self.set_resizable(False)
         self.set_default_size(256, 88)
@@ -291,8 +292,8 @@ class Panel(Gtk.Window):
         self.title_hovered = set()
         self.reveal_labels = {}
         self.title_timer = None
-        self.set_title("Fluff · 라우팅 모니터")
-        self.set_wmclass("codex-routing-panel", "Codex-routing-pet")
+        self.set_title("Pawline · 작업 정보")
+        self.set_wmclass("pawline", "Pawline")
         self.set_name("routing-panel")
         self.set_decorated(False)
         self.set_resizable(False)
@@ -783,8 +784,8 @@ class Fluff(Overlay):
 
     def _configure_window(self):
         super()._configure_window()
-        self.set_title("Fluff")
-        self.set_wmclass("codex-routing-fluff", "Codex-routing-pet")
+        self.set_title(APP_NAME)
+        self.set_wmclass("pawline", "Pawline")
 
     def _bubble_visible(self):
         return False  # status belongs to the fixed panel, not transient upstream phrases
@@ -899,18 +900,22 @@ def capture_widgets(panel, pet, path):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Fluff with routing status on hover or click")
+    ap = argparse.ArgumentParser(description="Pawline — local agent status beside your pet")
     ap.add_argument("--pet-dir", type=Path, default=Path.home() / ".codex/pets/fluff")
     ap.add_argument("--test-seconds", type=float)
     ap.add_argument("--screenshot", type=Path)
     args = ap.parse_args(argv)
+    set_process_name()
+    GLib.set_prgname("pawline")
+    GLib.set_application_name(APP_NAME)
+    Gtk.Window.set_default_icon_from_file(str(ICON))
     directory = state_dir()
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     lock = (directory / "pet.lock").open("a")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
-        print("Fluff is already running")
+        print("Pawline is already running")
         return 0
     os.umask(0o077)
     load_app_font()
@@ -973,7 +978,7 @@ def main(argv=None):
         GLib.timeout_add(int(args.test_seconds * 1000), lambda: pet.quit() or False)
     for sig in (signal.SIGINT, signal.SIGTERM):
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, sig, lambda: pet.quit() or False)
-    print(f"Fluff ready: {view.pet.frame_counts}", flush=True)
+    print(f"Pawline ready: {view.pet.frame_counts}", flush=True)
     Gtk.main()
     return 0
 

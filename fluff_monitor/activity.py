@@ -381,6 +381,8 @@ class ActivityCollector:
 
 
 def main(argv=None):
+    from .identity import set_process_name
+    set_process_name('pawline-usage')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state-dir", type=Path)
     parser.add_argument("--database", type=Path)

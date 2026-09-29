@@ -34,7 +34,7 @@ import tempfile
 import threading
 import time
 import zlib
-from dataclasses import dataclass
+from .messages import WsMessage
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -60,16 +60,6 @@ def have_crypto() -> bool:
 
 class WsError(Exception):
     """The WebSocket byte stream could not be decoded (relaying continues regardless)."""
-
-
-@dataclass
-class WsMessage:
-    """One complete WebSocket message on a watched connection."""
-    direction: str  # "c2s" (client to server) or "s2c" (server to client)
-    text: str | bytes  # The asynchronous observer retains UTF-8 bytes.
-    ts: float
-    conn: int
-    transport: str = "websocket"
 
 
 # ---------------------------------------------------------------- certificates

@@ -15,7 +15,7 @@ import time
 from types import SimpleNamespace
 
 from PySide6.QtCore import Qt, QTimer, Signal, QPoint, QRect, QPropertyAnimation
-from PySide6.QtGui import QFont, QFontDatabase, QImage, QPainter, QPixmap, QColor
+from PySide6.QtGui import QFont, QFontDatabase, QImage, QPainter, QPixmap, QColor, QIcon
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QWidget, QFrame, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy
 
@@ -27,6 +27,7 @@ from .presentation import usage_text, route_status, menu_actions, model_text, gp
 from .pet_state import MismatchAlerts
 from .storage import SnapshotReader, atomic_json, read_json, state_dir
 from .views import desktop_view, claude_view
+from .identity import APP_NAME, DESKTOP_ID, ICON, identify_windows_app, set_process_name
 
 ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(ROOT / "vendor/claude-pet"))
@@ -371,6 +372,7 @@ class ProviderSection(QWidget):
 class Panel(Surface):
     def __init__(self, directory, settings, save):
         super().__init__(None)
+        self.setWindowTitle("Pawline · 작업 정보")
         self.owner = self
         self.directory, self.settings, self.save = directory, settings, save
         self.pet = None
@@ -502,6 +504,7 @@ class Panel(Surface):
 class PetWindow(QWidget):
     def __init__(self, pet_dir, panel):
         super().__init__(None, Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowTitle(APP_NAME)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.panel = panel
         self.pack = load_pet(pet_dir)
@@ -627,7 +630,13 @@ def main(argv=None):
     directory.mkdir(parents=True, exist_ok=True)
     lock = (directory/"pet.lock").open("a+b")
     if not lock_exclusive(lock):return 0
-    app = QApplication.instance() or QApplication(["Fluff"])
+    set_process_name()
+    identify_windows_app()
+    app = QApplication.instance() or QApplication([APP_NAME])
+    app.setApplicationName(APP_NAME)
+    app.setApplicationDisplayName(APP_NAME)
+    app.setDesktopFileName(DESKTOP_ID)
+    app.setWindowIcon(QIcon(str(ICON)))
     app.setQuitOnLastWindowClosed(False)
     QFontDatabase.addApplicationFont(str(ROOT/"assets/fonts/PretendardVariable.ttf"))
     settings_file = directory/"panel.json"

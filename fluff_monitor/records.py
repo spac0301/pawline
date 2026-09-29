@@ -2,6 +2,7 @@
 from __future__ import annotations
 from dataclasses import dataclass,field
 import re
+import math
 from typing import Dict,List,Optional,Tuple
 TERMINAL_STATUSES={"completed","failed","incomplete","cancelled"}
 UNSUPPORTED_RE=re.compile(r"(?i)not supported|not available|unsupported model|does not have access|model_not_found|no access to|not entitled|not enabled for")
@@ -97,7 +98,9 @@ class ResponseCollector:
             if rec is None:
                 rec = ResponseRecord(
                     response_id=rid, model=None, status=None,
-                    service_tier=r.get("service_tier"), created_at=r.get("created_at"),
+                    service_tier=r.get("service_tier"),
+                    created_at=(r.get("created_at") if type(r.get("created_at")) in (int, float)
+                                and math.isfinite(r["created_at"]) else None),
                     kind="turn" if r.get("previous_response_id") else "warmup",
                 )
                 self.by_id[rid] = rec
@@ -113,7 +116,9 @@ class ResponseCollector:
             rec.status = metadata_text(r.get("status")) or rec.status
             rec.service_tier = metadata_text(r.get("service_tier")) or rec.service_tier
             if rec.created_at is None and r.get("created_at") is not None:
-                rec.created_at = r.get("created_at")
+                value = r.get("created_at")
+                if type(value) in (int, float) and math.isfinite(value):
+                    rec.created_at = value
             # Token usage is collected from native logs by activity.py. Do not
             # retain an unused, provider-controlled usage object in this reducer.
             err = r.get("error")

@@ -2,9 +2,9 @@
 from __future__ import annotations
 import json,time,uuid
 from collections import Counter, OrderedDict
-from dataclasses import dataclass,field
+from dataclasses import asdict,dataclass,field
 from typing import Dict,List,Optional,Tuple
-from . import records as cmc,proxy as crp
+from . import records as cmc,messages as crp
 Event=Tuple[str,dict]
 
 MAX_ROWS = 256
@@ -155,6 +155,68 @@ class LiveAggregator:
     def resume_observation(self):
         """Accept a fresh connection; existing requests keep their loss markers."""
         self.disabled_reason = None
+
+    def checkpoint(self):
+        """Bounded metadata only, transferred over a private pipe during reload."""
+        rows = {r.n: r for r in [*self.rows, *self.rows_by_request.values()]}
+        requests = {r['n']: dict(r) for r in self._requests()}
+        for conn in self.conns.values():
+            requests.update((r['n'], dict(r)) for r in conn.pending)
+        return dict(protocol=1, requests=list(requests.values()),
+            latest=self.latest_request['n'] if self.latest_request else None,
+            sessions=[[tid, r['n']] for tid, r in self.session_requests.items()],
+            rows=[asdict(r) for r in rows.values()], history=[r.n for r in self.rows],
+            by_request=[[n, r.n] for n, r in self.rows_by_request.items()],
+            connections=[dict(number=n, pending=[r['n'] for r in c.pending],
+                rows=[[rid, r.n] for rid, r in c.rows_by_id.items()],
+                records=[asdict(c.collector.by_id[rid]) for rid in c.collector.order],
+                errors=c.collector.stream_errors, retired=c.retired, touched=c.touched)
+                for n, c in self.conns.items()],
+            hints=list(self.hints.items()), open=list(self.open_connections),
+            lost=list(self.lost_connections), counts=dict(self._counts),
+            mismatches=dict(self._mismatches), request_count=self.request_count,
+            row_sequence=self._row_sequence, disabled_reason=self.disabled_reason,
+            unparsed=self.unparsed)
+
+    def restore(self, state):
+        """Rebuild shared record/request references before receiving more frames."""
+        if state.get('protocol') != 1:
+            raise ValueError('unsupported observer checkpoint')
+        if (len(state['history']) > self.max_rows or len(state['sessions']) > self.max_sessions
+                or len(state['connections']) > self.max_connections
+                or len(state['rows']) > self.max_rows + self.max_sessions + 1):
+            raise ValueError('observer checkpoint exceeds retention bounds')
+        requests = {r['n']: dict(r) for r in state['requests']}
+        rows = {}
+        for value in state['rows']:
+            fields = dict(value)
+            record = fields.pop('record')
+            rows[fields['n']] = LiveRow(**fields, record=cmc.ResponseRecord(**record) if record else None)
+        self.rows = [rows[n] for n in state['history']]
+        self.rows_by_request = {n: rows[row] for n, row in state['by_request']}
+        self.latest_request = requests.get(state['latest'])
+        self.session_requests = OrderedDict((tid, requests[n]) for tid, n in state['sessions'])
+        self.conns = OrderedDict()
+        for value in state['connections']:
+            conn = _Conn(pending=[requests[n] for n in value['pending']],
+                rows_by_id={rid: rows[n] for rid, n in value['rows']},
+                retired=value['retired'], touched=value['touched'])
+            for record in value['records']:
+                rid = record['response_id']
+                row = conn.rows_by_id.get(rid)
+                conn.collector.by_id[rid] = row.record if row else cmc.ResponseRecord(**record)
+                conn.collector.order.append(rid)
+            conn.collector.stream_errors = [tuple(e) for e in value['errors']]
+            self.conns[value['number']] = conn
+        self.hints = dict(state['hints'])
+        self.open_connections = set(state['open'])
+        self.lost_connections = set(state['lost'])
+        self._counts = Counter(state['counts'])
+        self._mismatches = Counter(state['mismatches'])
+        self.request_count = state['request_count']
+        self._row_sequence = state['row_sequence']
+        self.disabled_reason = state['disabled_reason']
+        self.unparsed = state['unparsed']
 
     def _drop_session(self, tid):
         req = self.session_requests.pop(tid)
