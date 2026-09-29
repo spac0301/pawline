@@ -18,13 +18,14 @@ PROTOCOL = 1
 LIMIT = 2 * 1024 * 1024
 FILES = ('__init__.py', 'identity.py', 'messages.py', 'observation.py', 'live.py',
          'records.py', 'storage.py', 'platform_support.py', 'observer_ipc.py', 'observer_worker.py')
+LICENSES = ('LICENSE', 'UPSTREAM-DETECTOR-LICENSE')
 
 
 def validate(data):
     if len(data) > LIMIT:
         raise ValueError('observer package exceeds size limit')
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
-        expected = {'fluff_monitor/' + name for name in FILES} | {'manifest.json'}
+        expected = {'fluff_monitor/' + name for name in FILES} | set(LICENSES) | {'manifest.json'}
         if (len(archive.namelist()) != len(expected) or set(archive.namelist()) != expected
                 or sum(f.file_size for f in archive.infolist()) > LIMIT):
             raise ValueError('unexpected observer package contents')
@@ -52,6 +53,8 @@ def build_bundle(root=None):
     if root.is_file():
         root = root.parent
     data = {f'fluff_monitor/{name}': (root / name).read_bytes() for name in FILES}
+    license_root = root.parent if all((root.parent / name).is_file() for name in LICENSES) else Path(__file__).resolve().parents[1]
+    data.update((name, (license_root / name).read_bytes()) for name in LICENSES)
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name, content in data.items():

@@ -155,6 +155,9 @@ class ObserverHost:
         self.child = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, env=env, bufsize=0, close_fds=True,
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)
+        if self.closed:
+            self.child.kill()
+            raise RuntimeError('observer host closed during worker startup')
         response, _ = self._rpc(dict(op='start', protocol=PROTOCOL,
                                     directory=str(self.directory)), checkpoint)
         ready, _ = self._rpc(dict(op='flush'))
@@ -264,7 +267,7 @@ class ObserverHost:
 
     def _watch(self):
         next_status = 0
-        while not self.closed:
+        while not self.closed or self.thread.is_alive():
             now = time.monotonic()
             child = self.child
             if self.rpc_deadline and now > self.rpc_deadline and child and child.poll() is None:

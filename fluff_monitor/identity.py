@@ -13,9 +13,12 @@ ICON = ROOT / "assets/app/pawline.png"
 def set_process_name(name="pawline"):
     """Expose a distinguishable process name without changing its arguments."""
     if sys.platform == "linux":
-        libc = ctypes.CDLL(None, use_errno=True)
-        if libc.prctl(15, ctypes.c_char_p(name.encode("ascii")[:15]), 0, 0, 0):
-            raise OSError(ctypes.get_errno(), "Could not set process name")
+        try:
+            libc = ctypes.CDLL(None, use_errno=True)
+            return libc.prctl(15, ctypes.c_char_p(name.encode("ascii")[:15]), 0, 0, 0) == 0
+        except (AttributeError, OSError):
+            return False
+    return True
 
 
 def identify_windows_app():
