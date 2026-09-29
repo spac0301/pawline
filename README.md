@@ -8,9 +8,9 @@ Codex와 Claude Code의 작업 상태, 요청·응답 모델, 입력 캐시 사�
 
 ## 다운로드
 
-**[Windows · 설치 EXE](https://github.com/spac0301/pawline/releases/download/v0.2.7/Pawline-Setup-0.2.7-x64.exe)** — Python 설치 없이 사용합니다. [설치 안내](WINDOWS.md)
+**[Windows · 설치 EXE](https://github.com/spac0301/pawline/releases/download/v0.2.8/Pawline-Setup-0.2.8-x64.exe)** — Python 설치 없이 사용합니다. [설치 안내](WINDOWS.md)
 
-**[Linux · ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.7/pawline-0.2.7-source.zip)** — Python·GTK3 환경에서 실행합니다. [설치 안내](INSTALL.md)
+**[Linux · ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.8/pawline-0.2.8-source.zip)** — Python·GTK3 환경에서 실행합니다. [설치 안내](INSTALL.md)
 
 ## 시작하기
 
@@ -30,6 +30,6 @@ Codex와 Claude Code의 작업 상태, 요청·응답 모델, 입력 캐시 사�
 <details>
 <summary>개발 문서와 다른 다운로드</summary>
 
-[포터블 Windows ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.7/pawline-0.2.7-windows-x64.zip) · [구조](docs/architecture.md) · [변경 기록](CHANGELOG.md) · [검증 범위](VERIFICATION.md)
+[수집기 업데이트 패키지](https://github.com/spac0301/pawline/releases/download/v0.2.8/pawline-0.2.8-observer.zip) · [포터블 Windows ZIP](https://github.com/spac0301/pawline/releases/download/v0.2.8/pawline-0.2.8-windows-x64.zip) · [구조](docs/architecture.md) · [변경 기록](CHANGELOG.md) · [검증 범위](VERIFICATION.md)
 
 </details>

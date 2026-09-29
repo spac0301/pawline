@@ -1,3 +1,20 @@
+# 0.2.8 — replace the observer without restarting Codex
+
+The relay and native CLI stay running while a separate metadata worker is
+replaced. Normal replacement transfers bounded request/response state through
+private pipes, preserving an in-flight response on the same connection. Worker
+crashes or stalls leave traffic flowing and restart observation conservatively.
+A separate code package updates the worker without overwriting a running EXE;
+a candidate that fails to start rolls back to the previous worker.
+
+Application menus, window titles and process identity now use Pawline, with an
+original application icon. Linux registers `pawline.desktop`; Windows binaries
+carry the Pawline icon and file descriptions. Ending the pet does not end Codex.
+
+Adapters older than 0.2.8 need one normal Codex launch to enter this structure.
+Changes to the relay, TLS handling or embedded Python runtime still require a
+normal adapter replacement; ordinary worker reloads and worker-code updates do not.
+
 # 0.2.7 — recover response observation after overload
 
 Response observation now resumes on a fresh WebSocket connection or HTTP

@@ -117,3 +117,17 @@ private account/state/log paths and private-key PEM text; no matches were found.
 OSV queries for the 12 checked Python dependency/build packages returned no
 matching advisories. This query does not cover every bundled native library or
 prove the absence of vulnerabilities.
+
+## Observer replacement
+
+The response reducer runs in a separate child with private inherited pipes.
+It receives no provider credentials, proxy secret or native CLI stdio. Its
+watchdog can stop that worker without signalling the native CLI or closing
+relay sockets. Normal replacement transfers bounded metadata in memory.
+
+An observer update ZIP is executable code, not a data import. Updates are
+explicit and never downloaded automatically. Size/path allowlists, protocol
+checks and hashes detect corruption or incomplete packages; they do not
+authenticate a publisher. Use only a trusted release. Installed packages and
+instance-bound reload commands are kept in the private application state
+directory. A failed candidate falls back to the previous working package.

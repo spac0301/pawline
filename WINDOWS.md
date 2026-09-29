@@ -1,10 +1,10 @@
 # Windows에서 시작하기
 
-[Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.7)
+[Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.8)
 
 ## 설치 파일로 실행
 
-`Pawline-Setup-0.2.7-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
+`Pawline-Setup-0.2.8-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
 관리자 권한이나 Python 설치는 필요하지 않습니다. Windows의 설치된 앱 목록에서 제거할 수 있습니다.
 
 [Fluff 원본](https://petdex.dev/pets/fluff)에서 펫을 받아 `pet.json`과 `spritesheet.webp`를 `%USERPROFILE%\.codex\pets\fluff`에 둔 뒤 Pawline을 실행합니다.
@@ -47,6 +47,24 @@ Claude 작업은 명령행의 `--session-id` 또는 `--resume` UUID, 혹은 사�
 
 `.cmd` 파일을 네이티브 CLI 경로로 지정하지 않습니다. 다른 사람의 계정 설정·키·세션 UUID를 복사하지 않습니다.
 브라우저·설정 조회 같은 보조 호출은 원래 CLI로 전달합니다. 기존 기업 프록시를 연결하는 기능은 아직 지원하지 않습니다.
+
+## 수집기만 새로고침하기
+
+0.2.8부터 실행 중인 Codex를 닫지 않고 수집기를 다시 실행할 수 있습니다. 설치 폴더에서 PowerShell로 실행합니다.
+
+```powershell
+.\pawline-capture\pawline-capture.exe --fluff-reload-observer
+```
+
+수집 코드 업데이트는 공식 릴리스의 `pawline-VERSION-observer.zip`으로 적용합니다. 실행 중인 EXE를 덮어쓰지 않습니다.
+
+```powershell
+.\pawline-capture\pawline-capture.exe --fluff-update-observer "C:\path\to\pawline-VERSION-observer.zip"
+```
+
+이 파일은 실행할 코드이므로 신뢰하는 릴리스에서만 받으세요. 새 수집기가 시작에 실패하면 이전 코드로 돌아갑니다.
+0.2.7 이하의 최초 전환과 통신 중계부·Python 런타임 교체는 다음 정상적인 Codex 실행부터 적용됩니다.
+작업 관리자에서 **Pawline**을 종료하면 펫이 닫힙니다. **Pawline Relay**는 Codex 통신 연결을 맡는 별도 프로세스입니다.
 
 ## 소스로 실행하거나 빌드
 

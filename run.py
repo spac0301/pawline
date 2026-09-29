@@ -5,6 +5,9 @@ import os
 from importlib import import_module
 if sys.platform not in ('linux', 'win32'):
     raise SystemExit('Fluff Monitor supports Linux and Windows frontends; this platform is not supported.')
+if len(sys.argv) == 3 and sys.argv[1] == 'observer-worker':
+    from fluff_monitor.observer_runtime import bootstrap
+    raise SystemExit(bootstrap(sys.argv[2]))
 if len(sys.argv)<2 or sys.argv[1] not in ('pet','activity','capture'):
     raise SystemExit('Usage: run.py {pet|activity|capture} [arguments]')
 mode = sys.argv[1]

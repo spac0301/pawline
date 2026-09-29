@@ -20,6 +20,12 @@ verification/
 .env.*
 activity.json
 desktop.json
+activity.heartbeat.json
+desktop.heartbeat.json
+observer.json
+observer-command.json
+observer-host.lock
+.observer-*/
 role-sources.json
 capture-config.json
 panel.json

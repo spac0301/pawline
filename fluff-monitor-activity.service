@@ -1,5 +1,5 @@
 [Unit]
-Description=Fluff shared local activity and input-cache telemetry
+Description=Pawline local activity and input-cache collector
 
 [Service]
 Type=simple
