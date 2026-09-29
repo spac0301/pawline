@@ -1,10 +1,10 @@
 # Windows에서 시작하기
 
-[Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.6)
+[Windows x64 다운로드](https://github.com/spac0301/pawline/releases/tag/v0.2.7)
 
 ## 설치 파일로 실행
 
-`Pawline-Setup-0.2.6-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
+`Pawline-Setup-0.2.7-x64.exe`를 받아 실행합니다. 현재 사용자 폴더에 설치하고 시작 메뉴에 Pawline 바로가기를 만듭니다.
 관리자 권한이나 Python 설치는 필요하지 않습니다. Windows의 설치된 앱 목록에서 제거할 수 있습니다.
 
 [Fluff 원본](https://petdex.dev/pets/fluff)에서 펫을 받아 `pet.json`과 `spritesheet.webp`를 `%USERPROFILE%\.codex\pets\fluff`에 둔 뒤 Pawline을 실행합니다.

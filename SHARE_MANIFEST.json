@@ -1,7 +1,7 @@
 {
   "name": "Pawline",
-  "version": "0.2.6",
-  "packaging_revision": "public-source-20260929-snapshot-update",
+  "version": "0.2.7",
+  "packaging_revision": "public-source-20260929-observer-recovery",
   "files": [
     {
       "path": ".github/workflows/check.yml",
@@ -25,12 +25,12 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "44300f81d3d700f8cea248a170d1d6a72ad5c108276e8dafd9641cdf460f2dda",
-      "bytes": 6110
+      "sha256": "fec183830b8a247fe0e3960865cbed4ea149b8f8dbf06bcc725b699824faf73f",
+      "bytes": 7058
     },
     {
       "path": "INSTALL.md",
-      "sha256": "1726828d6355a48371821bc1589023c12f6bf682bf33fb56b427e74249709972",
+      "sha256": "91d145a0612d7bf870482c287452ace846afb7ea4f3461275590a24790393122",
       "bytes": 2310
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "61738319c5093d4afe1f616323045cdfdb45ca4c7b14dc535f2766c54a4d5ace",
+      "sha256": "526a014a97afeb191ce9e5e2256871fbb3a39acd9dd0e9b9975334e23a4784f8",
       "bytes": 2230
     },
     {
@@ -70,7 +70,7 @@
     },
     {
       "path": "WINDOWS.md",
-      "sha256": "4c023c24bd050c48ce968b928ae0c0f2d65e2005e2fd579bab93e21f87e20f88",
+      "sha256": "c62503d77e90e3a8770fa7676a11e50ded47abf646feaba629a62a80aabc3d89",
       "bytes": 4408
     },
     {
@@ -150,7 +150,7 @@
     },
     {
       "path": "fluff_monitor/__init__.py",
-      "sha256": "d8f72c0e8766ba4eaa8e9e0cdc46aaff2a418ce356260e2733f9aa8699f8777a",
+      "sha256": "aaf472fe5c4b85f4d7663d3805e309a86fe6702895527c1d1842979794ebfe95",
       "bytes": 74
     },
     {
@@ -160,8 +160,8 @@
     },
     {
       "path": "fluff_monitor/capture.py",
-      "sha256": "40f3f236cff71c4d4447958f71eb8e48cca671b31c76e7a85aaec794c693100f",
-      "bytes": 11689
+      "sha256": "ce9d67bed14d3da674f29cddf67ccec7bc58a3c47f9b3a7d9bc2f4134a2c5bde",
+      "bytes": 13299
     },
     {
       "path": "fluff_monitor/catalog.py",
@@ -180,8 +180,8 @@
     },
     {
       "path": "fluff_monitor/live.py",
-      "sha256": "c9dae972353f8e4f2afd1ddda2d187abda9701fd0a136cc36050c9527759b9a2",
-      "bytes": 16942
+      "sha256": "6f4153325a97f08081f4b90633714fedaa6a348c3861a3d38e6901311958f71d",
+      "bytes": 17097
     },
     {
       "path": "fluff_monitor/menu.py",
@@ -190,8 +190,8 @@
     },
     {
       "path": "fluff_monitor/pet.py",
-      "sha256": "de354c7da9e8ac15e323b443e1687a910c74358c891f65f04d6d87e95fbf1812",
-      "bytes": 47784
+      "sha256": "37c85244419530fcfbf30dac18cacb11863a726141f2b964a7b37e5b9083d99e",
+      "bytes": 48026
     },
     {
       "path": "fluff_monitor/pet_state.py",
@@ -205,18 +205,18 @@
     },
     {
       "path": "fluff_monitor/presentation.py",
-      "sha256": "0d7fab761a1691b8aece5765320a4bfcbd77013bb767749c7a7ea99cde23b894",
-      "bytes": 3216
+      "sha256": "91b563d8d01fc0435bec1410c916da2f138dfbe355a793cdcb019ec0d3cd8cc5",
+      "bytes": 3840
     },
     {
       "path": "fluff_monitor/proxy.py",
-      "sha256": "fe037828203f24e82072c5bdd333aa2b613a5e91ca594d561861e3717715c3d2",
-      "bytes": 29575
+      "sha256": "606cf0ca06ce565020a8c3057c53ee5c6ee07b62942ce13f29fd28bd242482cc",
+      "bytes": 29633
     },
     {
       "path": "fluff_monitor/qt_pet.py",
-      "sha256": "acb5d2852c08b32b11280eadeb178e19c3373930e3498eab8f3ed4eb02a7b9d6",
-      "bytes": 28478
+      "sha256": "39f6fb7678f2a0d6404cf51b1ea303941af7b962b294e1e414842529ef7d00f3",
+      "bytes": 28737
     },
     {
       "path": "fluff_monitor/records.py",
@@ -230,8 +230,8 @@
     },
     {
       "path": "fluff_monitor/views.py",
-      "sha256": "3d10f4d73912f26480912d2d706a17ae50139c3ba0929f58568287ad6d4a333f",
-      "bytes": 10205
+      "sha256": "30286ac53cdacabd11886373a99d12844ed4ba77f701af05e90fd625bd0f0641",
+      "bytes": 11450
     },
     {
       "path": "launch-capture.sh",
@@ -250,7 +250,7 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "8595366be7d39a2599fa926ae5d5108b9d77f32d58a5f9bf596e02f756fbce1b",
+      "sha256": "82cefaaefc801a965e157a0c2c047fbf85caaf92df9a69a06c5d0e8addde51fe",
       "bytes": 505
     },
     {
@@ -290,13 +290,13 @@
     },
     {
       "path": "tests/test_http_recovery.py",
-      "sha256": "5dd74684d743abb65e4d9b022363fb9bdb093df3b2d170e96e56e6aa27554d85",
-      "bytes": 10915
+      "sha256": "f72fc2d8876a07d239afd0306322c9620e6785bc4389a0b28e4d7c6d402e9329",
+      "bytes": 13859
     },
     {
       "path": "tests/test_observer_resilience.py",
-      "sha256": "2b2439b2bdfb8b61a77de98138742f38819a3ab70f78fa92b8a20d90dbbae405",
-      "bytes": 12794
+      "sha256": "71ffbb9e1e272fbe78601c250029f3b6d77b0f5d7017cefd8ad02d9797a4d59f",
+      "bytes": 19436
     },
     {
       "path": "tests/test_pet_behavior.py",
@@ -315,8 +315,8 @@
     },
     {
       "path": "tests/test_shared_snapshots.py",
-      "sha256": "a6acb4927e9dcbaeb19adc1d1342281c56a634ba8dd624918ebb32978aed82e3",
-      "bytes": 2243
+      "sha256": "0bce12e33a858b740eaa58e3b0d1326c0e813d166b263ee04124bac57e5a18c7",
+      "bytes": 5692
     },
     {
       "path": "tests/test_snapshot_heartbeat.py",
@@ -330,13 +330,13 @@
     },
     {
       "path": "tests/verify_activity_ui.py",
-      "sha256": "1f798a9622573a080f800e1536e8d0848458cb74143eb7ea7d7721c0835168a8",
-      "bytes": 21809
+      "sha256": "d640718c42bf888ca5ce6842b3940f5bd8a5eb73f0a16093fd4c59674356203b",
+      "bytes": 22621
     },
     {
       "path": "tests/verify_qt_ui.py",
-      "sha256": "39e1ef49e01122bbd996acf62b486d62d2b1d03a55edb4f2336396c1e03b544d",
-      "bytes": 8370
+      "sha256": "074e8893994e56ad3f4245e648bc97a34c5d8dc512a5f2a44def5bca082ba518",
+      "bytes": 9070
     },
     {
       "path": "tests/verify_windows_bundle.py",
@@ -505,7 +505,7 @@
     },
     {
       "path": "windows/pawline.iss",
-      "sha256": "591fca238cab9c73de48fe590e27b79e011467919274f0562d5ddb7ff4c250e9",
+      "sha256": "9a3bbe3551faa0a2cc6d0ef883ba53453cb86aaed8ae6573e5901e5b5d087458",
       "bytes": 1112
     },
     {
@@ -520,7 +520,7 @@
     },
     {
       "path": "windows/verify-installer.ps1",
-      "sha256": "e49fa60653dc03d0dc1d9e65df5c458ff6b29a7a60db8b7f9c8470865952fab8",
+      "sha256": "932fdfcd9d003ff6a298d58fcf24eb010f8ed03d787d0f4f03db95258a5effd8",
       "bytes": 1632
     },
     {

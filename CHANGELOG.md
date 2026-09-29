@@ -1,4 +1,12 @@
-# 0.2.7 — keep tasks and usage visible when observation stops
+# 0.2.7 — recover response observation after overload
+
+Response observation now resumes on a fresh WebSocket connection or HTTP
+exchange after a queue or processing failure. Previously, one overflow disabled
+the observer for its entire lifetime. Connections with missing frames remain
+untrusted; later responses from them cannot be attributed to a new request.
+The queue keeps its memory limit and retains UTF-8 bytes instead of charging
+every character four bytes. Loss diagnostics record sizes and counts only.
+Already missed response models cannot be reconstructed from task settings.
 
 GPT task selection and input-cache usage now come from the native task records
 independently of response-model capture. When capture stops, GTK and Qt retain
