@@ -5,8 +5,13 @@
 
 ## 배포 검사 상태
 
-0.2.9 Windows 실행 파일과 설치 파일은 빌드·실행·설치·제거 검사를 거친 뒤 릴리스에 첨부합니다.
-아래 결과는 배포 검사 완료 시 해당 실행 기록과 소스 커밋으로 갱신됩니다.
+[Windows 빌드·실행 검사](https://github.com/spac0301/pawline/actions/runs/36576156677) · [Linux·Windows 소스 검사](https://github.com/spac0301/pawline/actions/runs/36575965122)
+
+- Windows 빌드 소스: `65030071f71ff599d2ecefedf583a93d680a011c`
+- Windows Server 2022 · Python 3.13.15 · x64에서 소스·Qt 화면·패키징한 EXE 실행 검사를 통과했습니다.
+- Linux 회귀 검사 129개 중 128개 통과, Windows 전용 권한 검사 1개 제외입니다.
+- 설치 파일은 이 빌드의 EXE로 만듭니다. [설치·제거 작업](https://github.com/spac0301/pawline/actions/workflows/windows-installer.yml)은 임시 경로에 설치한 파일의 해시, 제거와 기존 사용자 자료 보존을 확인합니다. 통과한 작업의 직접 링크는 0.2.9 릴리스에 함께 제공합니다.
+- 빌드 이후 변경은 이 검사 안내와 배포 명세의 갱신입니다. 실행 코드의 바이트는 빌드한 소스와 동일합니다.
 
 - Linux GTK 격리 화면과 Linux Qt offscreen 화면의 글자 크기·굵기·색, 공통 열과 펼침 아이콘의 위치를 확인했습니다.
 - 제목 14px, 모델·캐시 값 13px, 보조 정보 12px가 실제 위젯에서 일치합니다.
