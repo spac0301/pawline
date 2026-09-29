@@ -22,6 +22,8 @@ def menu_actions(surface, *, theme="dark", pinned=False, walking=False):
 
 
 def route_status(value):
+    if value.get("observation_disabled") or value.get("capture_lost"):
+        return "관측 중단", "waiting"
     states = {"ok": ("일치", "neutral"), "OK": ("일치", "neutral"),
               "REROUTED": ("불일치", "bad"), "ERROR": ("실패", "waiting"),
               "UNSUPPORTED": ("미지원", "waiting"), "PENDING": ("응답 대기", "blue"),
@@ -31,6 +33,14 @@ def route_status(value):
     if value.get("verdict") == "PENDING" and value.get("status") == "in_progress":
         text = "응답 중"
     return text, tone
+
+
+def gpt_request(value):
+    """Keep a captured request distinct from the native session's setting."""
+    if value.get("requested"):
+        return "요청", value["requested"], value.get("effort"), "선택한 작업의 요청에서 관측한 모델·추론 설정입니다."
+    return ("설정", value.get("configured_model"), value.get("configured_effort"),
+            "선택한 Codex 작업의 로컬 기록에 남은 모델·추론 설정입니다. 응답 모델명을 확인한 값은 아닙니다.")
 
 
 def age_text(at, now=None):

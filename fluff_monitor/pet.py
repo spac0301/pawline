@@ -24,7 +24,7 @@ from gi.repository import GdkPixbuf
 from . import views
 from .storage import atomic_json, read_json, state_dir, SnapshotReader
 from .catalog import display_title, SnapshotCatalog
-from .presentation import age_text, usage_text, route_status, menu_actions, model_text
+from .presentation import age_text, usage_text, route_status, menu_actions, model_text, gpt_request
 from .pet_state import MismatchAlerts, MotionCycle
 from .menu import MenuWindow, TitleReveal, menu_action, beside_position
 
@@ -344,7 +344,8 @@ class Panel(Gtk.Window):
             grid = Gtk.Grid(column_spacing=6, row_spacing=3)
             grid.set_hexpand(True)
             for index, (name, value) in enumerate(values):
-                caption = leading(label(name))
+                value.caption_label = label(name)
+                caption = leading(value.caption_label)
                 caption.set_valign(Gtk.Align.BASELINE)
                 value.set_valign(Gtk.Align.BASELINE)
                 value.set_hexpand(True)
@@ -624,8 +625,9 @@ class Panel(Gtk.Window):
         self.session_button.get_accessible().set_description(title+" · "+("선택한 작업 고정" if selected else "최근 요청 자동 선택"))
         entries=[]
         for item in route.get("sessions") or []:
-            detail=model_text(item.get("requested")) or "요청 대기"
-            if item.get("effort"):detail+=" · "+item["effort"]
+            _, model, effort, _ = gpt_request(item)
+            detail=model_text(model) or "기록 대기"
+            if effort:detail+=" · "+effort
             entries.append(dict(key=item["thread_id"],title=display_title(item.get("title")) or "이름 없는 작업",detail=detail))
         signature=(selected,tuple((x["key"],x["title"],x["detail"]) for x in entries))
         if signature!=self.session_signature:
@@ -730,15 +732,17 @@ class Panel(Gtk.Window):
         self._chip(self.chip, text.split(" · ", 1)[0], tone)
         self.chip.set_tooltip_text("서버 응답이 진행 중입니다. 완료되면 모델명 일치 여부를 표시합니다."
                                   if verdict == "PENDING" else "서버 응답의 모델명 " + text)
-        if verdict == "OBSERVATION_GAP":
+        if verdict == "OBSERVATION_GAP" or route.get("observation_disabled") or route.get("capture_lost"):
             self.chip.set_tooltip_text(route.get("detail"))
         if children.get("running"):
             self.chip.set_tooltip_text(self.chip.get_tooltip_text() + "\n" + children_detail)
-        requested = model_text(route.get("requested")) or "—"
-        if route.get("effort"):
-            requested += " · " + str(route["effort"])
+        caption, model, effort, request_detail = gpt_request(route)
+        self.requested.caption_label.set_text(caption)
+        requested = model_text(model) or "—"
+        if effort:
+            requested += " · " + str(effort)
         self.requested.set_text(requested)
-        self.requested.set_tooltip_text(requested)
+        self.requested.set_tooltip_text(request_detail)
         self.served.set_text(model_text(route.get("served")) or ("모델명 미수집" if verdict == "OBSERVATION_GAP" else "—"))
         self.served.set_tooltip_text(route.get("served") or "응답 모델명을 아직 확인하지 못했습니다")
         stamp = time.strftime("%H:%M:%S", time.localtime(at)) if at else ""

@@ -9,12 +9,16 @@ def desktop_view(directory=None, now=None, *, thread_id=None, catalog=None, acti
     now = now or time.time()
     value = capture if capture is not None else read_snapshot(Path(directory or state_dir()) / "desktop.json")
     has_capture = bool(value)
-    sessions = value.get("sessions") or []
+    sessions = [dict(entry) for entry in (value.get("sessions") or [])]
     observations = list(sessions)
+    metrics = activity if activity is not None else read_snapshot(Path(directory or state_dir()) / "activity.json")
+    metrics_fresh = bool(metrics) and 0 <= now - metrics.get("updated_at", 0) <= 10 and metrics.get("catalog_available", True)
+    states = (metrics.get("threads") or {}) if metrics_fresh else {}
     common = {key: value.get(key) for key in ("active", "updated_at", "publisher_pid", "session_protocol", "observation_disabled")}
     titles = {}
     if catalog is not None:
         ids = [entry["thread_id"] for entry in sessions if entry.get("thread_id")]
+        ids.extend(states)
         if thread_id:
             ids.append(thread_id)
         titles = catalog.resolve(ids)
@@ -24,16 +28,28 @@ def desktop_view(directory=None, now=None, *, thread_id=None, catalog=None, acti
                     if entry.get("thread_id") in titles]
         # A saved subagent is not a separate user task. Never classify by title.
         sessions = [s for s in sessions if catalog.metadata.get(s["thread_id"], {}).get("kind", "task") == "task"]
+        observed_ids = {entry["thread_id"] for entry in sessions}
+        # Saved native tasks exist independently of response-model observation.
+        # A native entry never supplies a server request/response or match verdict.
+        native_ids = sorted(states, key=lambda tid: max(
+            states[tid].get("last_model_activity_at") or 0,
+            states[tid].get("state_at") or 0), reverse=True)
+        for tid in native_ids:
+            if (tid not in observed_ids and tid in titles
+                    and catalog.metadata.get(tid, {}).get("kind", "task") == "task"
+                    and states[tid].get("available", True)):
+                sessions.append(dict(thread_id=tid, title=titles[tid], native_only=True,
+                                     requested=None, served=None, connected=False,
+                                     request_source="unknown", verdict="NO_DATA"))
     recent, history = list(sessions), []
-    metrics = activity if activity is not None else read_snapshot(Path(directory or state_dir()) / "activity.json")
-    metrics_fresh = bool(metrics) and now - metrics.get("updated_at", 0) <= 10 and metrics.get("catalog_available", True)
     if metrics_fresh:
-        states = metrics.get("threads") or {}
         for entry in sessions:
             meta = states.get(entry["thread_id"]) or {}
             entry["activity"] = meta.get("state", "unknown")
             entry["usage"] = meta.get("usage")
             entry["last_model_activity_at"] = meta.get("last_model_activity_at")
+            entry["configured_model"] = meta.get("model")
+            entry["configured_effort"] = meta.get("effort")
             entry["children"] = child_activity(entry["thread_id"], states, now)
         # Response completion is not task completion. A saved selection must not
         # keep an ended/stale task in the current-task list indefinitely.
@@ -84,7 +100,8 @@ def desktop_view(directory=None, now=None, *, thread_id=None, catalog=None, acti
     elif not value.get("active") or now - value.get("updated_at", 0) > 7:
         value.update(label="앱 감시 끊김", verdict="UNKNOWN", connected=False, active=False)
     elif value.get("capture_lost") or value.get("observation_disabled"):
-        value.update(label="앱 응답 읽기 중단", verdict="UNKNOWN", served=None)
+        value.update(label="앱 응답 읽기 중단", verdict="UNKNOWN", served=None,
+                     detail="응답 모델 관측이 중단됐습니다. 작업 목록과 사용량은 로컬 기록에서 계속 읽습니다.")
     elif not value.get("connected") and value.get("transport") == "http" and value.get("error_code"):
         value["label"] = "HTTP 응답 오류"
     elif not value.get("connected") and value.get("transport")=="http" and value.get("response_id") and value.get("status") in ("completed","failed","incomplete","cancelled"):

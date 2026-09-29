@@ -23,7 +23,7 @@ from .activity import ActivityCollector
 from .catalog import SnapshotCatalog
 from .layout import beside_position
 from .platform_support import lock_exclusive
-from .presentation import usage_text, route_status, menu_actions, model_text
+from .presentation import usage_text, route_status, menu_actions, model_text, gpt_request
 from .pet_state import MismatchAlerts
 from .storage import SnapshotReader, atomic_json, read_json, state_dir
 from .views import desktop_view, claude_view
@@ -335,6 +335,7 @@ class ProviderSection(QWidget):
         caption.setObjectName("muted")
         caption.setFixedWidth(54)
         value = Text("—")
+        value.caption_label = caption
         row.addWidget(blank)
         row.addWidget(caption)
         row.addWidget(value, 1)
@@ -344,8 +345,11 @@ class ProviderSection(QWidget):
     def update_data(self, value):
         self.title.set_title(value.get("title") or "현재 작업 없음")
         if self.provider == "gpt":
-            requested, effort = value.get("requested"), value.get("effort")
+            caption, requested, effort, detail = gpt_request(value)
+            self.requested.caption_label.setText(caption)
+            self.requested.setToolTip(detail)
             status, tone = route_status(value)
+            self.status.setToolTip(value.get("detail") or "서버 응답의 모델명 관측 상태입니다.")
             served = value.get("served") or ("모델명 미수집" if value.get("verdict")=="OBSERVATION_GAP" else "—")
         else:
             requested, effort = value.get("requested_model"), value.get("requested_effort")
