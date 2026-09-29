@@ -50,8 +50,8 @@
     },
     {
       "path": "SECURITY.md",
-      "sha256": "37a56c7ccc79ccba57866bee642c0e1cc375b3fdaf06276dda92a321950dea67",
-      "bytes": 6556
+      "sha256": "6190deed443afd7e3e6a2a2a50c25e85c867127f764d847b2675abd2d3d2bd01",
+      "bytes": 6719
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -65,8 +65,8 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "e97fa3c3a05ecbd447b18d0af9be76e7f8deba448bb0c4119989907be0ffd44b",
-      "bytes": 3580
+      "sha256": "8ff3ea8b80a477ff37a7947fbddba746096b0e5fe0069c0dd5312f969acfd163",
+      "bytes": 3828
     },
     {
       "path": "WINDOWS.md",
@@ -130,8 +130,8 @@
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "fde9420455182174c317bb7445f215beff4d0eefced51530258180a9bee6f947",
-      "bytes": 10900
+      "sha256": "9fbfb2cf63063a1144032d84d0f42b96f4e2769fde5219662f940187a0948c22",
+      "bytes": 11276
     },
     {
       "path": "docs/snapshots.md",

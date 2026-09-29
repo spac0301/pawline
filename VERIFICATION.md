@@ -1,12 +1,12 @@
-# 검증 범위 · 0.2.6
+# 검증 범위 · 0.2.7
 
 ## Windows 배포본
 
-[빌드·실행 검사 기록](https://github.com/spac0301/pawline/actions/runs/36497935071)
+[빌드·실행 검사 기록](https://github.com/spac0301/pawline/actions/runs/36503467976)
 
-- 소스: `64c33aa524b7aa7a573a9dc40f1d9f7fc58fc8e4`
+- 소스: `47b934bd7be933ba87519ee5fa50a82ddd028d31`
 - Windows Server 2022 · Python 3.13.15 · x64에서 EXE 빌드 성공
-- 공통 검사 105개: 98개 통과, 다른 플랫폼 전용 7개 제외
+- 공통 검사 111개: 104개 통과, 다른 플랫폼 전용 7개 제외
 - GTK·Qt의 `claude-opus-5.5` 표시와 잘린 활동 상태의 펼치기·닫기·열 위치 유지 확인
 - Windows Qt 화면과 패키징된 EXE의 시작·종료 확인
 - 두 실행 파일에 Python 3.13.15와 `python313.dll` 포함 확인
@@ -22,12 +22,15 @@
 
 ## Linux와 공통 동작
 
-0.2.6의 [Linux·Windows 소스 검사](https://github.com/spac0301/pawline/actions/runs/36497893059)가 통과했습니다. GTK 격리 화면과 Qt offscreen 화면 검사도 새 소스에서 통과했습니다.
+Linux에서 공통 검사를 실행했고, 같은 소스의 Windows 검사도 위 빌드에서 통과했습니다. GTK 격리 화면과 Qt offscreen 화면에서 관측 중단 시 작업·설정 모델·사용량 표시를 확인했습니다.
 
-- 로컬 공통 검사 103개: 102개 통과, Windows ACL 검사 1개 제외. 이후 추가한 2개를 포함한 heartbeat 계약 검사 8개도 통과
+- 로컬 공통 검사 111개: 110개 통과, Windows ACL 검사 1개 제외
 - GTK 격리 화면과 Qt offscreen 화면의 열 정렬, 제목 여백·펼치기, 메뉴 위치, 종료된 선택 해제 확인
 - 로컬 TLS 서버에서 WebSocket·HTTP/SSE 전달, 요청·응답 연결, 인증, 관측 실패 시 통신 유지 확인
 - 기록 상한, 큐 초과, 저장 실패·지연, 닫힌 연결 정리 확인
+- 큐 초과·집계 실패 뒤 새 연결에서 수집 재개, 이전 연결의 늦은 응답 거부 확인
+- 같은 TLS 연결의 다음 HTTP 요청에서 프록시 재시작 없이 수집 복구 확인
+- 5 MiB 입력과 비ASCII 문자가 메모리 한도 안에서 처리되는지 확인
 - 브라우저·설정 조회용 호출이 원래 CLI에 전달되고 관측기를 추가 실행하지 않는지 확인
 
 ## 저장과 생존 확인

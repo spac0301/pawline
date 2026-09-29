@@ -66,8 +66,10 @@ unknown. Unknown/uncorrelated model fields are never substituted from settings.
 Version 0.2.1 addresses the independently reproduced 0.2.0 WebSocket callback
 failure, which could interrupt the real relay. Relay callbacks now enqueue into
 a bounded worker; snapshot IO never runs on the socket pump. If observation
-overflows or its reducer fails, that capture instance becomes explicitly
-unobserved. Filesystem write failures are isolated and publication can recover.
+overflows or its reducer fails, affected metadata becomes explicitly unknown.
+From 0.2.7, fresh connections can resume observation in the same adapter while
+old connections remain untrusted. Loss diagnostics contain counts and sizes,
+not payloads. Filesystem write failures are isolated and publication can recover.
 History, session summaries and connection parsers have explicit retention caps.
 The worker holds queued raw messages only in bounded memory and never writes
 their request/answer contents to disk.
