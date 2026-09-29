@@ -1,4 +1,4 @@
-#define AppVersion "0.2.7"
+#define AppVersion "0.2.8"
 [Setup]
 AppId=Pawline
 AppName=Pawline
@@ -27,7 +27,7 @@ InfoAfterFile=install-note.txt
 Source: "..\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Pawline"; Filename: "{app}\pawline\pawline.exe"
+Name: "{autoprograms}\Pawline"; Filename: "{app}\pawline\pawline.exe"; AppUserModelID: "spac0301.Pawline"
 Name: "{autoprograms}\Pawline - Help"; Filename: "https://github.com/spac0301/pawline/blob/main/WINDOWS.md"
 
 [Run]
